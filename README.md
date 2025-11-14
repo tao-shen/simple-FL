@@ -1,16 +1,10 @@
 # Simple-FL: A Simple and Professional Federated Learning Framework
 
-[English](#english) | [中文](#中文)
-
----
-
-## English
-
-### Overview
+## Overview
 
 Simple-FL is a clean, modular, and easy-to-use federated learning framework designed for research purposes. It provides implementations of various federated learning algorithms with a focus on code readability and extensibility.
 
-### Features
+## Features
 
 - 🎯 **Simple & Clean**: Minimal design with clear code structure
 - 🔧 **Modular**: Easy to extend with new algorithms, models, and datasets
@@ -19,18 +13,18 @@ Simple-FL is a clean, modular, and easy-to-use federated learning framework desi
 - 🧠 **Flexible Models**: CNN, ResNet, DIN, and custom model support
 - 📈 **Experiment Tracking**: Built-in result logging and optional Wandb integration
 
-### Installation
+## Installation
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd simple-fl
+git clone https://github.com/tao-shen/simple-FL.git
+cd simple-FL
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Quick Start
+## Quick Start
 
 ```bash
 # Run federated learning experiment
@@ -38,9 +32,12 @@ python scripts/train_fl.py
 
 # Run centralized training (baseline)
 python scripts/train_centralized.py
+
+# Test imports
+python scripts/test_import.py
 ```
 
-### Project Structure
+## Project Structure
 
 ```
 simple-fl/
@@ -50,15 +47,14 @@ simple-fl/
 │   ├── datasets/      # Dataset loaders
 │   ├── core/          # Server, Client, Data initialization
 │   └── utils/         # Utility functions
-├── configs/           # Configuration files
 ├── scripts/           # Training scripts
+├── configs/           # Configuration files
 ├── data/              # Data directory
 ├── results/           # Experiment results
 └── logs/              # Log files
 ```
 
-
-### Configuration
+## Configuration
 
 Edit `configs/config.yaml` to customize your experiment:
 
@@ -71,15 +67,17 @@ clients_per_round: 10
 communication_rounds: 100
 ```
 
-### Supported Algorithms
+## Supported Algorithms
 
 - **FedAvg**: Federated Averaging
 - **FedProx**: Federated Optimization with Proximal Term
 - **Scaffold**: Stochastic Controlled Averaging
 - **FedLeo**: Federated Learning with Learned Optimizer
+- **FedOpt**: Federated Optimization (Adam, Yogi, Adagrad)
+- **FedAvgM**: FedAvg with Server Momentum
 - And more...
 
-### Supported Datasets
+## Supported Datasets
 
 - **FEMNIST**: Federated EMNIST (62 classes)
 - **CIFAR-10/100**: Image classification
@@ -87,73 +85,38 @@ communication_rounds: 100
 - **MovieLens**: Recommendation system
 - **Amazon**: Product recommendation
 
-### Citation
+## Adding New Algorithms
 
-If you use this code in your research, please cite:
+1. Create a new file in `simplefl/methods/`
+2. Inherit from the `FL` base class
+3. Implement required methods
+4. The algorithm will be automatically discovered
 
-```bibtex
-@misc{simple-fl,
-  title={Simple-FL: A Simple and Professional Federated Learning Framework},
-  author={Your Name},
-  year={2024}
-}
+Example:
+
+```python
+from simplefl.methods.fl import FL
+
+class MyNewAlgorithm(FL):
+    def __init__(self, server, clients, args):
+        super().__init__()
+        # Your initialization
+    
+    def train_round(self, round_idx):
+        # Your training logic
+        pass
 ```
 
----
+## Documentation
 
-## 中文
+- **README.md** - This file
+- **MIGRATION_GUIDE.md** - Guide for migrating from old structure
+- **CHANGELOG.md** - Version history and changes
 
-### 概述
-
-Simple-FL 是一个简洁、模块化、易于使用的联邦学习框架，专为科研目的设计。它提供了多种联邦学习算法的实现，注重代码可读性和可扩展性。
-
-### 特性
-
-- 🎯 **简单清晰**：最小化设计，代码结构清晰
-- 🔧 **模块化**：易于扩展新算法、模型和数据集
-- 📊 **多种算法**：FedAvg、FedProx、Scaffold、FedLeo 等
-- 🗂️ **多种数据集**：FEMNIST、CIFAR-10/100、MovieLens、Fashion-MNIST 等
-- 🧠 **灵活模型**：CNN、ResNet、DIN 及自定义模型支持
-- 📈 **实验追踪**：内置结果记录和可选的 Wandb 集成
-
-### 安装
-
-```bash
-# 克隆仓库
-git clone <your-repo-url>
-cd simple-fl
-
-# 安装依赖
-pip install -r requirements.txt
-```
-
-### 快速开始
-
-```bash
-# 运行联邦学习实验
-python scripts/train_fl.py
-
-# 运行中心化训练（基线）
-python scripts/train_centralized.py
-```
-
-### 配置
-
-编辑 `configs/config.yaml` 自定义实验：
-
-```yaml
-dataset: femnist
-device: cuda:0
-method: fedavg
-local_epochs: 5
-clients_per_round: 10
-communication_rounds: 100
-```
-
-### 许可证
+## License
 
 MIT License
 
-### 联系方式
+## Contact
 
-如有问题或建议，请提交 Issue 或 Pull Request。
+For questions or issues, please open an issue on GitHub.
