@@ -59,3 +59,4 @@ mlruns/
 # Backup
 backup/
 old/
+notebooks/paper.ipynb
