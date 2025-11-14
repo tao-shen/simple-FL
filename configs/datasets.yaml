@@ -1,0 +1,170 @@
+femnist:
+  local_batch_size: 20
+  eval_batch_size: 1000
+  # clients_per_round: 10
+  communication_rounds: 1000
+  local_optimizer: 'sgd'
+  features:
+    user_id: ['user_id',]
+    pixels: ['pixels']
+    label: ['label']
+
+ml-1m:
+  local_batch_size: 100
+  eval_batch_size: 10000
+  clients_per_round: 20
+  communication_rounds: 1000
+  local_optimizer: 'adam'
+  embedding:
+    { 'user_id': {num: 6041, size: 15},
+      'user_gender': {num: 3, size: 2},
+      'user_age': {num: 8, size: 3},
+      'user_occup': {num: 22, size: 5},
+      'user_zip': {num: 3440, size: 15}, 
+      'item': {num: 3953, size: 15},}
+  features:
+    cat_feats: [
+      'user_id',
+      'user_gender',
+      'user_age',
+      'user_occup',
+      'user_zip',
+      'cand_item_id',
+      ]
+    seq_feats: [
+      'ipv_item_seq',
+      ]
+    num_feats: []
+    label: ['label']
+
+cifar10:
+  local_batch_size: 128
+  local_epochs: 3
+  eval_batch_size: 200
+  n_clients: 10
+  clients_per_round: 10
+  communication_rounds: 200
+  local_optimizer: 'sgd'
+  features:
+    # user_id: ['user_id',]
+    pixels: ['pixels']
+    label: ['label']
+
+cifar100:
+  local_batch_size: 128
+  local_epochs: 3
+  eval_batch_size: 200
+  n_clients: 10
+  clients_per_round: 10
+  communication_rounds: 200
+  local_optimizer: 'sgd'
+  features:
+    # user_id: ['user_id',]
+    pixels: ['pixels']
+    label: ['label']
+
+fashionmnist:
+  local_batch_size: 20
+  eval_batch_size: 500
+  n_clients: 500
+  clients_per_round: 10
+  communication_rounds: 1500
+  local_optimizer: 'sgd'
+  features:
+    # user_id: ['user_id',]
+    pixels: ['pixels']
+    label: ['label']
+
+shakespeare:
+  local_batch_size: 100
+  eval_batch_size: 10000
+  clients_per_round: 20
+  communication_rounds: 1000
+  local_optimizer: 'adam'
+  embedding:
+    { 'user_id': {num: 6041, size: 15},
+      'user_gender': {num: 3, size: 2},
+      'user_age': {num: 8, size: 3},
+      'user_occup': {num: 22, size: 5},
+      'user_zip': {num: 3440, size: 15}, 
+      'item': {num: 3953, size: 15},}
+  features:
+    cat_feats: [
+      'user_id',
+      'user_gender',
+      'user_age',
+      'user_occup',
+      'user_zip',
+      'cand_item_id',
+      ]
+    seq_feats: [
+      'ipv_item_seq',
+      ]
+    num_feats: []
+    label: ['label']
+
+ml-100k:
+  embedding:
+    { 'user_id': {num: 944, size: 15},
+      'user_gender': {num: 3, size: 2},
+      'user_age': {num: 62, size: 3},
+      'user_occup': {num: 22, size: 5},
+      'user_zip': {num: 796, size: 15}, 
+      'item': {num: 1683, size: 15},}
+
+  features:
+    cat_feats: [
+      'user_id',
+      'user_gender',
+      'user_age',
+      'user_occup',
+      'user_zip',
+      'cand_item_id',
+      ]
+    seq_feats: [
+      'ipv_item_seq',
+      ]
+    num_feats: []
+    label: ['label']
+
+
+amazon:
+  embedding:
+    { 'user_id': {num: 826768, size: 50},
+      'item': {num: 50211, size: 50},}
+
+  features:
+    cat_feats: [
+      'user_id',
+      'cand_item_id',
+      ]
+    seq_feats: [
+      'ipv_item_seq',
+      ]
+    num_feats: []
+    label: ['label']
+
+
+last_fm:
+  embedding:
+    { 'user_id': {num: 1894, size: 15},
+      # 'user_gender': {num: 3, size: 2},
+      # 'user_age': {num: 8, size: 3},
+      # 'user_occup': {num: 22, size: 5},
+      # 'user_zip': {num: 3440, size: 15}, 
+      'item': {num: 18746, size: 50},}
+
+  features:
+    cat_feats: [
+      'user_id',
+      # 'user_gender',
+      # 'user_age',
+      # 'user_occup',
+      # 'user_zip',
+      'cand_item_id',
+      ]
+    seq_feats: [
+      'ipv_item_seq',
+      ]
+    num_feats: []
+    label: ['label']

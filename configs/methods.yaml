@@ -1,0 +1,316 @@
+femnist:
+  fedavg:
+    lr_l: 0.01
+  gaussian:
+    lr_l: 0.01
+  fedavg_iid_each_round:
+    lr_l: 0.01
+  fedavg_client_drift_only:
+    lr_l: 0.01
+  fedavg_period_drift_only:
+    lr_l: 0.01
+  fedavgm:
+    lr_l: 0.01
+    lr_g: 1
+    beta1: 0.9
+  fedprox:
+    lr_l: 0.01
+    mu: 1
+  fedprox_iid_each_round:
+    lr_l: 0.01
+    mu: 1
+  scaffold:
+    lr_l: 0.01
+    lr_g: 1
+  fedopt:
+    lr_l: 0.01
+    lr_g: 0.001
+    beta1: 0.9
+    beta2: 0.99
+    tau: 0.0003
+  fedeve:
+    lr_l: 0.01
+    lr_g: 1
+  feddf:
+    lr_l: 0.01
+    lr_g: 0.0001
+    server_batch_size: 1000
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedmeta:
+    lr_l: 0.01
+    lr_g: 0.0001
+    server_batch_size: 1000
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedleo:
+    lr_l: 0.01
+    lr_g: 0.01
+    proxy_ratio: 0.01
+    server_batch_size: 500
+    server_epochs: 1
+    server_optimizer: 'adam'
+    # test_client_ratio: 0.2
+  feddyn:
+    lr_l: 0.01
+  fedspeed:
+    lr_l: 0.01
+  fedrecom:
+    lr_l: 0.01
+  fedcsd:
+    lr_l: 0.01
+    lr_g: 0.1
+  mime:
+    lr_l: 0.01
+    lr_g: 1
+  feddyn:
+    lr_l: 0.01
+    lr_g: 1
+  fedlow:
+    lr_l: 0.01
+    # lora_rank: 4
+  elastic:
+    lr_l: 0.01
+    lr_g: 1
+
+fashionmnist:
+  fedavg:
+    lr_l: 0.01
+  gaussian:
+    lr_l: 0.01
+  fedavg_iid_each_round:
+    lr_l: 0.01
+  fedavg_client_drift_only:
+    lr_l: 0.01
+  fedavg_period_drift_only:
+    lr_l: 0.01
+  fedavgm:
+    lr_l: 0.01
+    lr_g: 1
+    beta1: 0.9
+  fedprox:
+    lr_l: 0.01
+    mu: 1
+  fedprox_iid_each_round:
+    lr_l: 0.01
+    mu: 1
+  scaffold:
+    lr_l: 0.01
+    lr_g: 1
+  fedopt:
+    lr_l: 0.01
+    lr_g: 0.001
+    beta1: 0.9
+    beta2: 0.99
+    tau: 0.0001
+  fedeve:
+    lr_l: 0.01
+    lr_g: 1
+  feddf:
+    lr_l: 0.01
+    lr_g: 0.0001
+    server_batch_size: 1000
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedmeta:
+    lr_l: 0.01
+    lr_g: 0.0001
+    server_batch_size: 1000
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedleo:
+    lr_l: 0.01
+    lr_g: 0.01
+    proxy_ratio: 0.001
+    server_batch_size: 500
+    server_epochs: 1
+    server_optimizer: 'adam'
+    test_client_ratio: 0.2
+  fedcsd:
+    lr_l: 0.01
+    lr_g: 1
+  mime:
+    lr_l: 0.01
+    lr_g: 1
+
+
+
+cifar10:
+  fedavg:
+    lr_l: 0.01
+  gaussian:
+    lr_l: 0.01
+  fedavgm:
+    lr_l: 0.01
+    lr_g: 1
+    beta1: 0.9
+  fedeve:
+    lr_l: 0.01
+    lr_g: 1
+  fedprox:
+    lr_l: 0.01
+    mu: 1
+  scaffold:
+    lr_l: 0.01
+    lr_g: 1
+  fedopt:
+    lr_l: 0.01
+    lr_g: 0.001
+    beta1: 0.9
+    beta2: 0.99
+    tau: 0.0001
+  feddf:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 5
+    server_optimizer: 'adam'
+  fedmeta:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedleo:
+    lr_l: 0.01
+    lr_g: 0.01
+    proxy_ratio: 0.001
+    server_batch_size: 20
+    server_epochs: 1
+    server_optimizer: 'adam'
+  feddyn:
+    lr_l: 0.01
+  fedspeed:
+    lr_l: 0.01 
+
+
+cifar100:
+  fedavg:
+    lr_l: 0.01
+  fedavgm:
+    lr_l: 0.01
+    lr_g: 1
+    beta1: 0.9
+  fedprox:
+    lr_l: 0.01
+    mu: 1
+  scaffold:
+    lr_l: 0.01
+    lr_g: 1
+  fedeve:
+    lr_l: 0.01
+    lr_g: 1
+  fedopt:
+    lr_l: 0.01
+    lr_g: 0.001
+    beta1: 0.9
+    beta2: 0.99
+    tau: 0.0001
+  feddf:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 5
+    server_optimizer: 'adam'
+  fedmeta:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedleo:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 5
+    server_optimizer: 'adam'
+  fedcsd:
+    lr_l: 0.01
+    lr_g: 1
+  mime:
+    lr_l: 0.01
+    lr_g: 1
+
+
+ml-1m:
+  fedavg:
+    lr_l: 0.01
+  fedavgm:
+    lr_l: 0.01
+    lr_g: 1
+    beta1: 0.9
+  fedprox:
+    lr_l: 0.01
+    mu: 0.01
+  scaffold:
+    lr_l: 0.01
+    lr_g: 1
+  fedopt:
+    lr_l: 0.01
+    lr_g: 0.001
+    beta1: 0.9
+    beta2: 0.99
+    tau: 0.0001
+  fedeve:
+    lr_l: 0.01
+    lr_g: 1
+  feddf:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 5
+    server_optimizer: 'adam'
+  fedmeta:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedleo:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 1000
+    proxy_ratio: 0.001
+    server_epochs: 5
+    server_optimizer: 'adam'
+
+shakespeare:
+  fedavg:
+    lr_l: 0.01
+  fedavgm:
+    lr_l: 0.01
+    lr_g: 1
+    beta1: 0.9
+  fedprox:
+    lr_l: 0.01
+    mu: 0.01
+  scaffold:
+    lr_l: 0.01
+    lr_g: 1
+  fedopt:
+    lr_l: 0.01
+    lr_g: 0.001
+    beta1: 0.9
+    beta2: 0.99
+    tau: 0.0001
+  fedeve:
+    lr_l: 0.01
+    lr_g: 1
+  feddf:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 5
+    server_optimizer: 'adam'
+  fedmeta:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedleo:
+    lr_l: 0.01
+    lr_g: 0.01
+    server_batch_size: 20
+    server_epochs: 5
+    server_optimizer: 'adam'
