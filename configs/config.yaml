@@ -1,0 +1,25 @@
+# dataset: ml-1m
+# dataset: last_fm
+# dataset: alipay
+dataset: femnist
+# dataset: fashionmnist
+# dataset: ml-100k
+# dataset: amazon
+# dataset: cifar100
+# dataset: cifar100
+# dataset: shakespeare
+device: cuda:3
+proxy_ratio: 0.01
+method: 'fedleo'
+# note: 'rating'
+note: 'agg1'
+iid: 'alpha_1'
+local_epochs: 1
+server_epochs: 1
+dropout: 0
+avg: w
+clients_per_round: 10
+lr_l: 0.01
+lr_g: 1
+lora_rank: 8
+'theme': '136new_home'
