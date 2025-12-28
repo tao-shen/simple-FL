@@ -60,3 +60,4 @@ mlruns/
 backup/
 old/
 notebooks/paper.ipynb
+setup_git_proxy.sh
