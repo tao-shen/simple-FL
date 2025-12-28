@@ -8,9 +8,9 @@ import h5py
 import numpy as np
 
 # Import dataset classes
-from simplefl.datasets.femnist import FEMNIST
-from simplefl.datasets.cifar import CIFAR
-from simplefl.datasets.movielens import MovieLens
+from simplefl.datasets import (
+    FEMNIST, CIFAR, MovieLens, Amazon, Fashion, Shakespeare
+)
 
 # Import model classes
 from simplefl.models.din import DIN
@@ -49,8 +49,6 @@ class Data_init:
             self.model = DIN(args)
         
         elif 'amazon' in args.dataset:
-            # Import Amazon dataset when needed
-            from simplefl.datasets._temp_data import Amazon
             data = Amazon(args)
             args.recorder = {'loss': [], 'hit5': [], 'recall5': [], 'ndcg5': [],
                              'auc': [], 'hit10': [], 'recall10': [], 'ndcg10': []}
@@ -67,8 +65,6 @@ class Data_init:
                 self.model = CNN_FEMNIST(args, num_classes=62)
 
         elif 'fashionmnist' in args.dataset:
-            # Import Fashion dataset when needed
-            from simplefl.datasets._temp_data import Fashion
             data = Fashion(args)
             args.recorder = {'loss': [], 'acc': []}
             # self.model = LeNet5(args, num_classes=10)
@@ -85,8 +81,6 @@ class Data_init:
             self.model = ResNet20(args, num_classes=100)
             
         elif 'shakespeare' in args.dataset:
-            # Import Shakespeare dataset when needed
-            from simplefl.datasets._temp_data import Shakespeare
             data = Shakespeare(args)
             args.recorder = {'loss': [], 'acc': []}
             self.model = ResNet18(args, num_classes=100)    

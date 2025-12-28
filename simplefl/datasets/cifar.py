@@ -6,7 +6,7 @@ import h5py
 import numpy as np
 import re
 from PIL import Image
-from simplefl.datasets import dirichlet_split_noniid, init_proxy_data
+from .common import dirichlet_split_noniid, init_proxy_data
 
 
 class CIFAR:

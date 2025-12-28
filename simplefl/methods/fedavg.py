@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import copy
 import torch
+from torch.utils.data import DataLoader
 
 
 class FedAvg(FL):

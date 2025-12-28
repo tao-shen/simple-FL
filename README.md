@@ -21,7 +21,10 @@ git clone https://github.com/tao-shen/simple-FL.git
 cd simple-FL
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -e .
+
+# Or install with optional dependencies
+pip install -e ".[tracking,visualization,notebooks]"
 ```
 
 ## Quick Start

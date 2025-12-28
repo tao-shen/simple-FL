@@ -1,12 +1,13 @@
 from simplefl.methods.fedavgm import FedAvgM
 from .fl import *
 from simplefl.utils import *
+from simplefl.models import PBA
+from torch.utils.data import DataLoader
 import numpy as np
 from tqdm import tqdm
 import copy
 import torch
 import torch.nn.functional as F
-from models import *
 
 
 class fedleo(FedAvgM):

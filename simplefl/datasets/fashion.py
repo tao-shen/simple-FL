@@ -1,5 +1,5 @@
 """
-FEMNIST Dataset Loader for Simple-FL
+Fashion-MNIST Dataset Loader for Simple-FL
 """
 
 import h5py
@@ -9,41 +9,34 @@ from PIL import Image
 from .common import dirichlet_split_noniid, init_proxy_data
 
 
-class FEMNIST:
+class Fashion:
     """
-    FEMNIST (Federated EMNIST) dataset loader
+    Fashion-MNIST dataset loader
     
     Supports natural partitioning, IID, and non-IID (Dirichlet) data splits
     """
-
-    def __init__(self, args, path='./data_in_use/', only_digits=False):
+    
+    def __init__(self, args, path='./data_in_use/'):
         """
-        Initialize FEMNIST dataset
+        Initialize Fashion-MNIST dataset
         
         Args:
             args: Arguments containing dataset configuration
             path: Path to data directory
-            only_digits: If True, only load digit classes (0-9), otherwise all 62 classes
         """
         with h5py.File(path + args.dataset + '.h5', 'r') as f:
             train_data, test_data = f['train'][:], f['test'][:]
-        
-        # Filter to only digits if specified
-        if only_digits:
-            train_data = train_data[train_data['label'] < 10]
-            test_data = test_data[test_data['label'] < 10]
         
         # Normalize pixel values
         train_data['pixels'] = self.normalize(train_data['pixels'])
         test_data['pixels'] = self.normalize(test_data['pixels'])
         
-        # Initialize proxy data if needed (for algorithms like FedLeo)
+        # Initialize proxy data if needed
         if args.proxy_ratio > 0:
             train_data, self.proxy_data = init_proxy_data(train_data, args)
         
         # Partition data based on IID strategy
         if 'natural' in args.iid:
-            # Natural partitioning by user_id
             self.user_offset = {
                 'train': np.append(np.unique(train_data['user_id'], return_index=True)[1], len(train_data)),
                 'test': np.append(np.unique(test_data['user_id'], return_index=True)[1], len(test_data))}
@@ -58,7 +51,7 @@ class FEMNIST:
             if args.n_clients is not None:
                 N_CLIENTS = args.n_clients
             else:
-                N_CLIENTS = len(np.unique(train_data['user_id']))
+                N_CLIENTS = 3400
             
             # Partition training data
             train_labels = train_data['label']
@@ -84,7 +77,7 @@ class FEMNIST:
             if args.n_clients is not None:
                 N_CLIENTS = args.n_clients
             else:
-                N_CLIENTS = len(np.unique(train_data['user_id']))
+                N_CLIENTS = 3400
             
             self.user_offset = {
                 'train': np.linspace(0, len(train_data), N_CLIENTS+1, endpoint=True).astype(int),
@@ -102,11 +95,9 @@ class FEMNIST:
         Returns:
             Normalized image
         """
-        mean = 0.03650044
-        std = 0.1602474
-        # mean = np.mean(img)
-        # std = np.std(img)
-        img = (img - mean) / std
+        mean = 73
+        var = 8100
+        img = (img - mean) / np.sqrt(var)
         return img
 
     def __getitem__(self, index):
@@ -127,3 +118,4 @@ class FEMNIST:
             return sample
         elif isinstance(index, str):
             return self.data[index]
+

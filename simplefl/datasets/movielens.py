@@ -4,7 +4,7 @@ MovieLens Dataset Loader for Simple-FL
 
 import h5py
 import numpy as np
-from simplefl.datasets import init_proxy_data
+from .common import init_proxy_data
 
 
 class MovieLens:

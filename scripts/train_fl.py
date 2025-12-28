@@ -22,8 +22,8 @@ setup_seed(args.seed)
 
 #! FOR FEDLEO
 # args.lr_l = 0.01
-args.FL_validate_clients = True
-args.validate_client_ratio = 0.1
+# args.FL_validate_clients = True
+# args.validate_client_ratio = 0.1
 #! FOR FEDLEO
 
 # Setup experiment name
