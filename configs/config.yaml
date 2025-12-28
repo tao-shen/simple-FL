@@ -10,7 +10,7 @@ dataset: femnist
 # dataset: shakespeare
 device: cuda:3
 proxy_ratio: 0.01
-method: 'fedleo'
+method: 'fedavg'
 # note: 'rating'
 note: 'agg1'
 iid: 'alpha_1'

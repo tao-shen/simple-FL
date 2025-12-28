@@ -35,9 +35,6 @@ python scripts/train_fl.py
 
 # Run centralized training (baseline)
 python scripts/train_centralized.py
-
-# Test imports
-python scripts/test_import.py
 ```
 
 ## Project Structure
@@ -109,12 +106,6 @@ class MyNewAlgorithm(FL):
         # Your training logic
         pass
 ```
-
-## Documentation
-
-- **README.md** - This file
-- **MIGRATION_GUIDE.md** - Guide for migrating from old structure
-- **CHANGELOG.md** - Version history and changes
 
 ## License
 
