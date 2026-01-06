@@ -110,26 +110,60 @@ class FedL2O(FedAvgM):
         """
         初始化 LSTM 隐藏状态
         
+        隐藏状态结构说明：
+        =================
+        hidden_states 是一个列表，包含 num_layers + 1 个元素：
+        
+        1. hidden_states[0:num_layers-1]: 隐藏层 LSTM 的状态
+           - 每个元素: [h, c] - 标准 LSTM 的隐藏状态和单元状态
+           - 形状: (2, hidden_size) 或 None（初始化为 None）
+           - 作用: 用于提取梯度的高级特征表示
+        
+        2. hidden_states[-1]: 输出层 LSTM 的状态
+           - 形状: (3, param_size)
+           - 内容: [weight_decay, learning_rate, model_parameters]
+             * [0]: weight_decay - 权重衰减状态（每个参数的权重衰减系数）
+             * [1]: learning_rate - 学习率状态（每个参数的学习率）
+             * [2]: model_parameters - 模型参数状态（当前模型参数的向量表示）
+           - 作用: 存储当前模型参数以及为每个参数学习到的优化超参数
+        
+        初始化策略：
+        ===========
+        - 隐藏层状态: 初始化为 None，在第一次前向传播时自动初始化为零
+        - 输出层状态: 
+          * weight_decay: 初始化为零向量
+          * learning_rate: 初始化为零向量
+          * model_parameters: 初始化为当前服务器模型的参数向量
+        
         Args:
             hidden_size: 隐藏层大小
-            num_layers: LSTM 层数
+            num_layers: LSTM 层数（不包括输出层）
         """
         # 初始化隐藏层状态（前 num_layers 层）
+        # 这些状态用于隐藏层 LSTM，存储 [h, c] 状态
         self.hidden_states = [None] * num_layers
         
-        # 获取模型参数向量
+        # 获取模型参数向量（当前服务器模型的参数）
+        # 这是输出层 LSTM 状态中模型参数部分的初始值
         model_parameters = self.server.model.to_vector().data.to(self.args.device)
         
         # 初始化权重衰减和学习率（用于输出层 LSTM）
-        weight_decay = torch.zeros_like(model_parameters)
-        learning_rate = torch.zeros_like(model_parameters)
+        # 这些是输出层 LSTM 状态中的优化超参数部分
+        # 初始化为零，LSTM 会在训练过程中学习这些值
+        weight_decay = torch.zeros_like(model_parameters)  # 权重衰减状态
+        learning_rate = torch.zeros_like(model_parameters)  # 学习率状态
         
         # 将权重衰减、学习率和模型参数堆叠作为最后一个隐藏状态
         # 输出层 LSTM 的状态格式：[weight_decay, learning_rate, model_parameters]
+        # 形状: (3, param_size)
+        # - [0]: 权重衰减状态（f_t）
+        # - [1]: 学习率状态（i_t）
+        # - [2]: 模型参数状态（c_t）- 这是当前模型参数的向量表示
         output_state = torch.stack([weight_decay, learning_rate, model_parameters], dim=0)
         self.hidden_states.append(output_state)
         
         # 初始化截断的隐藏状态（用于训练时重置）
+        # 在训练 L2O 网络时，使用截断的隐藏状态可以避免梯度爆炸
         self.truncated_hidden_states = copy.deepcopy(self.hidden_states)
 
     def server_update(self):
@@ -160,13 +194,23 @@ class FedL2O(FedAvgM):
         
         # 使用 L2O 网络聚合梯度并更新模型
         with torch.set_grad_enabled(self.training_mode):
+            # L2O 网络处理流程：
+            # 1. 输入: client_gradients - 各客户端的模型梯度（参数更新量）
+            # 2. L2A 聚合: 将多个客户端梯度聚合并预处理为特征 (param_size, 2)
+            # 3. L2U 更新: LSTM 基于梯度特征和当前参数状态，学习新的参数值
+            # 4. 输出: update_vector - LSTM 学习到的新模型参数向量
+            #          updated_hidden_states - 更新后的 LSTM 状态
+            #            - 包含学习率状态 (i_t)、权重衰减状态 (f_t)、模型参数状态 (c_t)
             update_vector, updated_hidden_states = self.l2o_optimizer(
                 client_gradients, self.hidden_states
             )
             # 更新隐藏状态（分离计算图以避免梯度累积）
+            # hidden_states[-1] 包含 [weight_decay, learning_rate, model_parameters]
             self.hidden_states = [state.data for state in updated_hidden_states]
             # 直接使用 LSTM 输出的新参数向量（与 fedleo 保持一致）
-            # θ_new = vec（直接替换）
+            # update_vector 来自 LSTM 输出层状态的 c_t（模型参数状态）
+            # 注意: 这里直接替换模型参数，而不是使用梯度更新
+            # θ_new = LSTM_output（直接替换，而非 θ_old - lr * gradient）
             self.server.model.from_vector(update_vector.data.cpu())
         
         # 记录学习到的优化参数
@@ -208,22 +252,35 @@ class FedL2O(FedAvgM):
         记录学习到的优化参数（学习率和权重衰减）
         
         这些参数是从 L2O 网络的输出层 LSTM 状态中提取的。
+        
+        参数提取说明：
+        =============
+        - hidden_states[-1]: 输出层 LSTM 的状态，形状为 (3, param_size)
+          * [0]: weight_decay_state - 权重衰减状态（每个参数的权重衰减系数）
+          * [1]: learning_rate_state - 学习率状态（每个参数的学习率）
+          * [2]: model_parameters - 模型参数状态（当前模型参数向量）
+        
+        - 这些状态是 LSTM 根据客户端梯度学习到的优化超参数
+        - 与传统优化器不同，这里每个参数都有独立的学习率和权重衰减
+        - 使用平方均值作为统计量，反映学习到的优化参数的总体水平
         """
         try:
             # 从输出层状态中提取学习率和权重衰减
             # hidden_states[-1] 格式：[weight_decay, learning_rate, model_parameters]
+            # 形状: (3, param_size)
             output_state = self.hidden_states[-1]
-            weight_decay_state = output_state[0].data
-            learning_rate_state = output_state[1].data
+            weight_decay_state = output_state[0].data  # 权重衰减状态 (param_size,)
+            learning_rate_state = output_state[1].data  # 学习率状态 (param_size,)
             
             # 计算学习到的参数（使用平方均值作为统计量）
+            # 这些值反映了 LSTM 为所有参数学习到的优化超参数的平均水平
             learned_learning_rate = torch.mean(learning_rate_state ** 2).item()
             learned_weight_decay = torch.mean(weight_decay_state ** 2).item()
             
             # 记录到记录器
             self.recorder({
-                'learned_lr_g': learned_learning_rate,
-                'learned_w_decay': learned_weight_decay
+                'learned_lr_g': learned_learning_rate,  # 学习到的学习率（全局统计）
+                'learned_w_decay': learned_weight_decay  # 学习到的权重衰减（全局统计）
             })
         except Exception:
             # 如果记录失败，静默忽略（可能在某些初始化阶段状态尚未准备好）
@@ -396,6 +453,37 @@ class L2O(nn.Module):
     整合 L2A（聚合）和 L2U（更新）两个部分，实现端到端的学习优化。
     基于 CoordinateLSTMOptimizer 修改而来，只是改变了结构组织。
     
+    LSTM 输入输出对应关系总览：
+    ===========================
+    输入流程：
+    1. client_gradients (param_size, num_clients)
+       → 各客户端的模型梯度（参数更新量）
+    
+    2. L2A 聚合 → processed_input (param_size, 2)
+       → 预处理后的梯度特征（幅值和符号）
+    
+    3. L2U 处理 → LSTM 网络
+       → 隐藏层 LSTM: 提取梯度特征
+       → 输出层 LSTM: 学习新的模型参数
+    
+    输出流程：
+    1. updated_params (param_size,)
+       → LSTM 学习到的新模型参数向量
+       → 来源: hidden_states[-1][2] (输出层 LSTM 的 c_t)
+    
+    2. updated_hidden_states
+       → hidden_states[0:num_layers-1]: 隐藏层 LSTM 的 [h, c] 状态
+       → hidden_states[-1]: 输出层 LSTM 的 [i, f, c] 状态
+         * i: 学习率状态（每个参数的学习率）
+         * f: 权重衰减状态（每个参数的权重衰减系数）
+         * c: 模型参数状态（新的模型参数向量）
+    
+    关键特点：
+    =========
+    - LSTM 直接输出新的模型参数值，而不是参数更新量
+    - 每个参数都有独立的学习率和权重衰减（Coordinate Descent 风格）
+    - 优化策略是通过学习得到的，而非人工设计
+    
     Attributes:
         l2a: L2A 模块，负责聚合客户端梯度
         l2u: L2U 模块，负责模型参数更新
@@ -448,12 +536,42 @@ class L2O(nn.Module):
         """
         前向传播：先聚合梯度，再更新模型参数
         
+        数据流说明：
+        ===========
+        1. 输入: client_gradients
+           - 形状: (param_size, num_clients)
+           - 内容: 各个客户端的模型梯度（delta_models 的向量化表示）
+           - 来源: 客户端本地训练后的模型更新量（模型参数的变化量）
+        
+        2. 梯度聚合: 通过 L2A 模块聚合多个客户端的梯度
+           - 平均聚合: 计算所有客户端梯度的平均值
+           - 预处理: 将梯度转换为两个特征（幅值和符号）
+           - 输出: processed_input，形状为 (param_size, 2)
+        
+        3. 参数更新: 通过 L2U 模块使用 LSTM 学习新的模型参数
+           - 输入: processed_input（预处理后的聚合梯度）
+           - LSTM 处理: 
+             * 隐藏层 LSTM: 提取梯度特征
+             * 输出层 LSTM: 基于梯度特征和当前参数状态，学习新的参数值
+           - 输出: updated_params（新的模型参数向量）
+        
+        4. 隐藏状态: hidden_states 存储了 LSTM 的内部状态
+           - 隐藏层状态: [h, c] - 用于特征提取
+           - 输出层状态: [i, f, c] - 其中 c 是模型参数，i 是学习率，f 是权重衰减
+        
         Args:
             client_gradients: 客户端梯度张量，形状为 (param_size, num_clients)
+              - 每一列代表一个客户端的模型梯度（参数更新量）
             hidden_states: LSTM 的隐藏状态列表
+              - 前 num_layers 个元素: 隐藏层 LSTM 的 [h, c] 状态
+              - 最后一个元素: 输出层 LSTM 的 [i, f, c] 状态
+                * i: 学习率状态（每个参数的学习率）
+                * f: 权重衰减状态（每个参数的权重衰减系数）
+                * c: 模型参数状态（当前模型参数的向量表示）
         
         Returns:
-            updated_params: 更新后的模型参数向量
+            updated_params: 更新后的模型参数向量，形状为 (param_size,)
+              - 这是 LSTM 学习到的新的模型参数，将直接替换当前模型参数
             updated_hidden_states: 更新后的隐藏状态列表
         """
         # 如果隐藏状态为空，初始化为零
@@ -464,7 +582,12 @@ class L2O(nn.Module):
 
         # 方法1：使用平均聚合（当前实现，与原始 CoordinateLSTMOptimizer 保持一致）
         # 通过 L2A 进行聚合（当前使用平均聚合，L2A 内部会处理）
+        # client_gradients: (param_size, num_clients) - 各客户端的梯度
+        # averaged_gradients: (param_size,) - 平均后的梯度
         averaged_gradients = torch.mean(client_gradients, dim=-1) / self.args.lr_l
+        # processed_input: (param_size, 2) - 预处理后的梯度特征
+        #   - [:, 0]: 梯度的幅值特征（对数缩放）
+        #   - [:, 1]: 梯度的符号特征（指数缩放）
         processed_input = self.l2a.aggregate(averaged_gradients)
         
         # 方法2：使用 L2A 进行智能聚合（可选，当前被注释，与原始代码保持一致）
@@ -472,6 +595,9 @@ class L2O(nn.Module):
         # processed_input = self.l2a.aggregate_with_attention(client_gradients)
         
         # 使用 L2U 进行模型参数更新（与 CoordinateLSTMOptimizer 保持一致）
+        # 输入: processed_input - 预处理后的聚合梯度特征
+        # 输出: updated_params - LSTM 学习到的新模型参数向量
+        #      hidden_states - 更新后的 LSTM 状态（包含学习率、权重衰减、模型参数）
         updated_params, hidden_states = self.l2u.forward(processed_input, hidden_states)
         
         return updated_params, hidden_states
@@ -627,12 +753,48 @@ class L2U(nn.Module):
         """
         前向传播：使用 LSTM 网络处理输入并更新模型参数
         
+        LSTM 输入输出对应关系说明：
+        ============================
+        输入 (input_features):
+        - 形状: (param_size, 2)
+        - 内容: 聚合后的客户端梯度，经过预处理转换为两个特征
+          * input_features[:, 0]: 梯度的幅值（对数缩放后的梯度绝对值）
+          * input_features[:, 1]: 梯度的符号（指数缩放后的梯度符号）
+        - 来源: 来自 L2A 模块聚合的客户端模型梯度（delta_models）
+        
+        隐藏层 LSTM (LSTMCell) 处理流程:
+        - 输入: 预处理后的梯度特征 (param_size, 2) 或前一层 LSTM 的隐藏状态
+        - 输出: [h_t, c_t] - 标准 LSTM 的隐藏状态和单元状态
+        - 作用: 提取梯度的高级特征表示，为输出层 LSTM 提供特征输入
+        
+        输出层 LSTM (LSTMCell_out) 处理流程:
+        - 输入: 最后一层隐藏层 LSTM 的隐藏状态 h_t (param_size, hidden_size)
+        - 状态: [i_prev, f_prev, c_prev] - 前一时间步的状态
+          * i_prev: 学习率状态（对应每个模型参数的学习率）
+          * f_prev: 权重衰减状态（对应每个模型参数的权重衰减系数）
+          * c_prev: 模型参数状态（当前模型参数的向量表示）
+        - 输出: [i_t, f_t, c_t] - 更新后的状态
+          * i_t: 更新后的学习率（用于参数更新的步长）
+          * f_t: 更新后的权重衰减（用于正则化）
+          * c_t: 更新后的模型参数（直接作为新的模型参数向量）
+        
+        最终输出 (updated_params):
+        - 来源: hidden_states[-1][-1]，即输出层 LSTM 的 c_t（模型参数状态）
+        - 形状: (param_size,)
+        - 含义: 这是 LSTM 学习到的新的模型参数向量，将直接替换当前模型参数
+        - 注意: 与传统的梯度下降不同，这里 LSTM 直接输出新的参数值，而不是参数更新量
+        
         Args:
             input_features: 输入特征（通常是聚合后的梯度），形状为 (param_size, 2)
             hidden_states: LSTM 的隐藏状态列表
+              - hidden_states[0:num_layers-1]: 隐藏层 LSTM 的 [h, c] 状态
+              - hidden_states[-1]: 输出层 LSTM 的 [i, f, c] 状态，其中：
+                * [0]: 权重衰减 (weight_decay)
+                * [1]: 学习率 (learning_rate)  
+                * [2]: 模型参数 (model_parameters)
         
         Returns:
-            updated_params: 更新后的模型参数向量
+            updated_params: 更新后的模型参数向量，形状为 (param_size,)
             updated_hidden_states: 更新后的隐藏状态列表
         """
         # 如果隐藏状态为空，初始化为零
@@ -642,14 +804,23 @@ class L2U(nn.Module):
             ] * self.num_layers
 
         # 通过每一层 LSTM 进行处理（与 CoordinateLSTMOptimizer 保持一致）
+        # 输入: input_features 是预处理后的梯度特征 (param_size, 2)
+        #       - 第0维: 梯度的幅值特征
+        #       - 第1维: 梯度的符号特征
         current_input = input_features
         for layer_idx, lstm_layer in enumerate(self.lstms):
+            # 隐藏层 LSTM: 处理梯度特征，提取高级表示
+            # 输出层 LSTM: 基于梯度特征和当前参数状态，学习新的参数值
             hidden_states[layer_idx] = lstm_layer(current_input, hidden_states[layer_idx])
+            # 使用隐藏状态 h_t 作为下一层的输入
             current_input = hidden_states[layer_idx][0]
 
-        # hidden_states[-1] 包含了 [weight_decay, learning_rate, model_parameters]
+        # hidden_states[-1] 包含了输出层 LSTM 的状态 [weight_decay, learning_rate, model_parameters]
+        # hidden_states[-1][0]: 权重衰减状态（f_t）
+        # hidden_states[-1][1]: 学习率状态（i_t）
+        # hidden_states[-1][2]: 模型参数状态（c_t）- 这是最终输出的新参数向量
         # hidden_states[:-1] 是前 num_layers 层 LSTM 的 [h, c] 状态
-        updated_params = hidden_states[-1][-1]  # 提取模型参数
+        updated_params = hidden_states[-1][-1]  # 提取模型参数（c_t）
         return updated_params, hidden_states
 
     def preprocess_input(self, gradient: torch.Tensor, 
@@ -829,33 +1000,84 @@ class LSTMCell_out(nn.Module):
         """
         前向传播函数
         
+        输出层 LSTM 的输入输出对应关系：
+        ================================
+        输入 (inputs):
+        - 形状: (param_size, hidden_size)
+        - 内容: 最后一层隐藏层 LSTM 的隐藏状态 h_t
+        - 含义: 基于客户端梯度提取的高级特征表示
+        
+        状态 (state):
+        - 形状: (3, param_size)
+        - 内容: [i_prev, f_prev, c_prev]
+          * i_prev: 前一时间步的学习率状态（每个参数的学习率）
+          * f_prev: 前一时间步的权重衰减状态（每个参数的权重衰减系数）
+          * c_prev: 前一时间步的模型参数状态（当前模型参数的向量表示）
+        
+        输出 (stacked_state):
+        - 形状: (3, param_size)
+        - 内容: [i_t, f_t, c_t]
+          * i_t: 更新后的学习率状态
+            - 对应模型参数更新的步长
+            - 用于控制参数更新的幅度
+          * f_t: 更新后的权重衰减状态
+            - 对应模型参数的正则化系数
+            - 用于防止过拟合
+          * c_t: 更新后的模型参数状态
+            - 这是最终输出的新模型参数向量
+            - 计算公式: c_t = (1 - f_t) * c_prev + i_t * g_t
+            - 其中 g_t 是基于当前梯度特征和参数状态学习到的参数更新量
+            - 注意: 这里直接输出新的参数值，而不是参数更新量（delta）
+        
+        参数更新机制：
+        =============
+        - 与传统优化器（如 SGD）不同，这里 LSTM 直接学习新的参数值
+        - 传统方式: θ_new = θ_old - lr * gradient
+        - L2O 方式: θ_new = LSTM(gradient_features, [lr_state, wd_state, θ_old])
+        - LSTM 会根据梯度特征和历史状态，为每个参数学习个性化的更新策略
+        
         Args:
-            inputs: 输入张量
-            state: 前一个时间步的状态 [i_prev, f_prev, c_prev]
+            inputs: 输入张量，形状为 (param_size, hidden_size)
+              - 来自最后一层隐藏层 LSTM 的隐藏状态 h_t
+              - 包含基于客户端梯度提取的特征信息
+            state: 前一个时间步的状态，形状为 (3, param_size)
+              - state[0]: i_prev - 学习率状态
+              - state[1]: f_prev - 权重衰减状态
+              - state[2]: c_prev - 模型参数状态（当前模型参数向量）
         
         Returns:
-            stacked_state: 堆叠的状态 [i_t, f_t, c_t]
+            stacked_state: 堆叠的状态，形状为 (3, param_size)
+              - [0]: i_t - 更新后的学习率状态
+              - [1]: f_t - 更新后的权重衰减状态
+              - [2]: c_t - 更新后的模型参数状态（新的模型参数向量）
         """
         i_prev, f_prev, c_prev = state
         
-        # 输入门
+        # 输入门: 控制新信息（基于梯度特征）的流入
+        # i_t 对应学习率，控制参数更新的幅度
         input_gate_logit = inputs @ self.W_ii + state.T @ self.W_hi + self.b_i
         i_t = torch.tanh(input_gate_logit) * input_gate_logit
         
-        # 遗忘门
+        # 遗忘门: 控制旧信息（当前参数）的保留
+        # f_t 对应权重衰减，控制参数的正则化程度
         forget_gate_logit = inputs @ self.W_if + state.T @ self.W_hf + self.b_f
         f_t = torch.tanh(forget_gate_logit) * forget_gate_logit
         
-        # 单元状态候选值
+        # 单元状态候选值: 基于梯度特征和当前状态学习参数更新量
+        # g_t 是基于当前梯度特征学习到的参数更新候选值
         cell_gate_logit = inputs @ self.W_ig + state.T @ self.W_hg + self.b_g
         g_t = torch.tanh(cell_gate_logit)
         
         # 压缩维度
-        i_t = i_t.squeeze(-1)
-        f_t = f_t.squeeze(-1)
-        g_t = g_t.squeeze(-1)
+        i_t = i_t.squeeze(-1)  # 学习率状态 (param_size,)
+        f_t = f_t.squeeze(-1)  # 权重衰减状态 (param_size,)
+        g_t = g_t.squeeze(-1)  # 参数更新候选值 (param_size,)
         
         # 更新单元状态（模型参数）
+        # c_t = (1 - f_t) * c_prev + i_t * g_t
+        # - (1 - f_t) * c_prev: 保留部分旧参数（权重衰减控制）
+        # - i_t * g_t: 添加新学习到的参数更新（学习率控制）
+        # 最终 c_t 就是新的模型参数向量
         c_t = (1 - f_t) * c_prev + i_t * g_t
 
         return torch.stack([i_t, f_t, c_t], dim=0)
