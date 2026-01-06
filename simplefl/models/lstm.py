@@ -240,7 +240,11 @@ class LSTMCell_out(nn.Module):
         c_t = (1-f_t) * c_prev + i_t * (g_t)
 
         return torch.stack([i_t, f_t, c_t], dim=0)
-
+# TODO:0. 目前还不确定重构后的fedl2o与fedleo的不一致是否是因为seed不同。
+# TODO:1. 复习lstm_out，为什么当时这么设计？与lstm_in对比，为什么用了lstm而不是lstm_in？
+# TODO:2. 添加后处理函数？？？（目前会直接输出模型参数，可能导致参数不稳定）
+# TODO:3. 修改变量初始化，使得初始阶段接近SGD
+# TODO:4. 以上都是为了解决不同seed情况下不稳定的问题。
 
 class LSTMCell(nn.Module):
     """

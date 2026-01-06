@@ -25,7 +25,7 @@ class FedLeo(FedAvgM):
         self.server.model = self.server.init_model()
         # 初始化代理数据
         self.server.proxy_data = self.server.init_proxy_data()
-        input_size, hidden_size, output_size, num_layers=2, 50, 1, 2 
+        input_size, hidden_size, output_size, num_layers=2, 30, 1, 2 
         # 初始化优化器
         # num_layers包括输入层和隐层，但还需要接入输出层
         self.agg_opt = CoordinateLSTMOptimizer(
