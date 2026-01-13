@@ -61,3 +61,6 @@ backup/
 old/
 notebooks/paper.ipynb
 setup_git_proxy.sh
+configure_mysql_13306.sh
+setup_mysql_13306.md
+setup_mysql_13306.sh

@@ -1,50 +1,50 @@
 femnist:
   fedavg:
-    lr_l: 0.01
+    lr_l: 0.001
   gaussian:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavg_iid_each_round:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavg_client_drift_only:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavg_period_drift_only:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavgm:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
     beta1: 0.9
   fedprox:
-    lr_l: 0.01
+    lr_l: 0.001
     mu: 1
   fedprox_iid_each_round:
-    lr_l: 0.01
+    lr_l: 0.001
     mu: 1
   scaffold:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedopt:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.001
     beta1: 0.9
     beta2: 0.99
     tau: 0.0003
   fedeve:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   feddf:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.0001
     server_batch_size: 1000
     server_epochs: 1
     server_optimizer: 'adam'
   fedmeta:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.0001
     server_batch_size: 1000
     server_epochs: 1
     server_optimizer: 'adam'
   fedleo:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     proxy_ratio: 0.01
     server_batch_size: 500
@@ -52,7 +52,7 @@ femnist:
     server_optimizer: 'adam'
     # test_client_ratio: 0.2
   fedl2o_insight:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     proxy_ratio: 0.01
     server_batch_size: 500
@@ -60,7 +60,7 @@ femnist:
     server_optimizer: 'adam'
     # test_client_ratio: 0.2
   fedl2o:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     proxy_ratio: 0.01
     server_batch_size: 500
@@ -68,74 +68,92 @@ femnist:
     server_optimizer: 'adam'
     # test_client_ratio: 0.2
   feddyn:
-    lr_l: 0.01
+    lr_l: 0.001
   fedspeed:
-    lr_l: 0.01
+    lr_l: 0.001
   fedrecom:
-    lr_l: 0.01
+    lr_l: 0.001
   fedcsd:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.1
   mime:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   feddyn:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedlow:
-    lr_l: 0.01
+    lr_l: 0.001
     # lora_rank: 4
   elastic:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
+  fedsam:
+    lr_l: 0.001
+    lr_g: 1
+    beta1: 0.9
+    sam_rho: 0.05
+    sam_adaptive: false
+  fednova:
+    lr_l: 0.001
+    nova_normalization: 'linear'
+  moon:
+    lr_l: 0.001
+    moon_mu: 1.0
+    moon_temperature: 0.5
+  fedlion:
+    lr_l: 0.001
+    lion_beta1: 0.9
+    lion_beta2: 0.99
+    lion_weight_decay: 0.0
 
 fashionmnist:
   fedavg:
-    lr_l: 0.01
+    lr_l: 0.001
   gaussian:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavg_iid_each_round:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavg_client_drift_only:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavg_period_drift_only:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavgm:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
     beta1: 0.9
   fedprox:
-    lr_l: 0.01
+    lr_l: 0.001
     mu: 1
   fedprox_iid_each_round:
-    lr_l: 0.01
+    lr_l: 0.001
     mu: 1
   scaffold:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedopt:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.001
     beta1: 0.9
     beta2: 0.99
     tau: 0.0001
   fedeve:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   feddf:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.0001
     server_batch_size: 1000
     server_epochs: 1
     server_optimizer: 'adam'
   fedmeta:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.0001
     server_batch_size: 1000
     server_epochs: 1
     server_optimizer: 'adam'
   fedleo:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     proxy_ratio: 0.001
     server_batch_size: 500
@@ -143,190 +161,280 @@ fashionmnist:
     server_optimizer: 'adam'
     test_client_ratio: 0.2
   fedcsd:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   mime:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
+  fedsam:
+    lr_l: 0.001
+    lr_g: 1
+    beta1: 0.9
+    sam_rho: 0.05
+    sam_adaptive: false
+  fednova:
+    lr_l: 0.001
+    nova_normalization: 'linear'
+  moon:
+    lr_l: 0.001
+    moon_mu: 1.0
+    moon_temperature: 0.5
+  fedlion:
+    lr_l: 0.001
+    lion_beta1: 0.9
+    lion_beta2: 0.99
+    lion_weight_decay: 0.0
 
 
 
 cifar10:
   fedavg:
-    lr_l: 0.01
+    lr_l: 0.001
   gaussian:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavgm:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
     beta1: 0.9
   fedeve:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedprox:
-    lr_l: 0.01
+    lr_l: 0.001
     mu: 1
   scaffold:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedopt:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.001
     beta1: 0.9
     beta2: 0.99
     tau: 0.0001
   feddf:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 5
     server_optimizer: 'adam'
   fedmeta:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 1
     server_optimizer: 'adam'
   fedleo:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     proxy_ratio: 0.001
     server_batch_size: 20
     server_epochs: 1
     server_optimizer: 'adam'
   feddyn:
-    lr_l: 0.01
+    lr_l: 0.001
   fedspeed:
-    lr_l: 0.01 
+    lr_l: 0.001
+  fedsam:
+    lr_l: 0.001
+    lr_g: 1
+    beta1: 0.9
+    sam_rho: 0.05
+    sam_adaptive: false
+  fednova:
+    lr_l: 0.001
+    nova_normalization: 'linear'
+  moon:
+    lr_l: 0.001
+    moon_mu: 1.0
+    moon_temperature: 0.5
+  fedlion:
+    lr_l: 0.001
+    lion_beta1: 0.9
+    lion_beta2: 0.99
+    lion_weight_decay: 0.0
 
 
 cifar100:
   fedavg:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavgm:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
     beta1: 0.9
   fedprox:
-    lr_l: 0.01
+    lr_l: 0.001
     mu: 1
   scaffold:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedeve:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedopt:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.001
     beta1: 0.9
     beta2: 0.99
     tau: 0.0001
   feddf:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 5
     server_optimizer: 'adam'
   fedmeta:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 1
     server_optimizer: 'adam'
   fedleo:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 5
     server_optimizer: 'adam'
   fedcsd:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   mime:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
+  fedsam:
+    lr_l: 0.001
+    lr_g: 1
+    beta1: 0.9
+    sam_rho: 0.05
+    sam_adaptive: false
+  fednova:
+    lr_l: 0.001
+    nova_normalization: 'linear'
+  moon:
+    lr_l: 0.001
+    moon_mu: 1.0
+    moon_temperature: 0.5
+  fedlion:
+    lr_l: 0.001
+    lion_beta1: 0.9
+    lion_beta2: 0.99
+    lion_weight_decay: 0.0
 
 
 ml-1m:
   fedavg:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavgm:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
     beta1: 0.9
   fedprox:
-    lr_l: 0.01
+    lr_l: 0.001
     mu: 0.01
   scaffold:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedopt:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.001
     beta1: 0.9
     beta2: 0.99
     tau: 0.0001
   fedeve:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   feddf:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 5
     server_optimizer: 'adam'
   fedmeta:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 1
     server_optimizer: 'adam'
   fedleo:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 1000
     proxy_ratio: 0.001
     server_epochs: 5
     server_optimizer: 'adam'
+  fedsam:
+    lr_l: 0.001
+    lr_g: 1
+    beta1: 0.9
+    sam_rho: 0.05
+    sam_adaptive: false
+  fednova:
+    lr_l: 0.001
+    nova_normalization: 'linear'
+  moon:
+    lr_l: 0.001
+    moon_mu: 1.0
+    moon_temperature: 0.5
+  fedlion:
+    lr_l: 0.001
+    lion_beta1: 0.9
+    lion_beta2: 0.99
+    lion_weight_decay: 0.0
 
 shakespeare:
   fedavg:
-    lr_l: 0.01
+    lr_l: 0.001
   fedavgm:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
     beta1: 0.9
   fedprox:
-    lr_l: 0.01
+    lr_l: 0.001
     mu: 0.01
   scaffold:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   fedopt:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.001
     beta1: 0.9
     beta2: 0.99
     tau: 0.0001
   fedeve:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 1
   feddf:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 5
     server_optimizer: 'adam'
   fedmeta:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 1
     server_optimizer: 'adam'
   fedleo:
-    lr_l: 0.01
+    lr_l: 0.001
     lr_g: 0.01
     server_batch_size: 20
     server_epochs: 5
     server_optimizer: 'adam'
+  fedsam:
+    lr_l: 0.001
+    lr_g: 1
+    beta1: 0.9
+    sam_rho: 0.05
+    sam_adaptive: false
+  fednova:
+    lr_l: 0.001
+    nova_normalization: 'linear'
+  moon:
+    lr_l: 0.001
+    moon_mu: 1.0
+    moon_temperature: 0.5
+  fedlion:
+    lr_l: 0.001
+    lion_beta1: 0.9
+    lion_beta2: 0.99
+    lion_weight_decay: 0.0

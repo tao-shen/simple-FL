@@ -104,9 +104,9 @@ class FedL2O(FedAvgM):
         self.gradient_checkpoints = []
         
         # 初始化 LSTM 隐藏状态
-        self._initialize_hidden_states(hidden_size, num_layers)
+        self.initialize_hidden_states(hidden_size, num_layers)
 
-    def _initialize_hidden_states(self, hidden_size: int, num_layers: int):
+    def initialize_hidden_states(self, hidden_size: int, num_layers: int):
         """
         初始化 LSTM 隐藏状态
         

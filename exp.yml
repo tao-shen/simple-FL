@@ -10,13 +10,9 @@ devices:
 
 # Base experiment configuration
 base_config:
-  theme: "icml25_baselines"
-  seed: "192"
+  theme: "FedL2O"
   exp_name: "main_baselines"
-  device: "cuda:3"
   dataset: "femnist"
-  method: "fedlow"
-  iid: "natural"
   # clients_per_round: 10
   # local_epochs: 5
   # test_client_ratio: 0.1
@@ -24,68 +20,26 @@ base_config:
 # Parallel experiment groups
 # These parameters will be varied in parallel (all combinations)
 parallel_groups:
-  # method:
-  #   - "fedavg"
-  #   - "fedavgm"
-  #   - "fedprox"
-  #   - "scaffold"
-  #   - "fedopt"
-  # lora_rank:
-  #   - "4"
-  #   - "8"
-  #   - "16"
-  #   - "32"
-  # method:
-  #   - "fedcsd"
-  #   - "elastic"
-  # seed:
-  #   - "192"
-  #   - "225"
-  #   - "226"
-  #   - "230"
-  #   - "231"
-  # iid:
-  #   - "alpha_1"
-  #   - "alpha_0.1"
-  #   - "alpha_0.01"
+  seed:
+    - "192"
+    - "225"
+    - "226"
+    - "230"
+    - "231"
 
 # Serial experiment groups
 # These parameters will be varied serially (one after another, waiting for completion)
 serial_groups:
-  # seed:
-  #   - "192"
-  #   - "225"
-  #   - "226"
-  #   - "230"
-  #   - "231"
-  # lr_l:
-  #   - "0.001"
-  #   - "0.01"
-  # cnn_version:
-  #   - "2layer"
-  #   - "3layer"
-  # method:
-  #   - "fedavg"
-  #   - "fedavgm"
-  #   - "fedprox"
-  #   - "scaffold"
-  #   - "fedopt"
-  # dataset:
-  #   - "fashionmnist"
-  #   - "cifar10"
-  #   - "cifar100"
-  # local_epochs:
-  #   - "1"
-  #   - "3"
-  #   - "5"
-  # mu:
-  #   - "0.1"
-  #   - "0.01"
-  #   - "0.001"
-  # clients_per_round:
-  #   - "10"
-  #   - "20"
-  #   - "30"
+  method:
+    - "fedavg"
+    - "fedprox"
+    - "fedavgm"
+    - "scaffold"
+    - "fedopt"
+    - "fednova"
+    - "fedsam"
+    - "feddyn"
+    - "fedspeed"
 
 # Device loop configuration
 # These parameters will be distributed across different devices
@@ -95,13 +49,6 @@ device_loop:
     - "alpha_1"
     - "alpha_0.1"
     - "alpha_0.01"
-  # seed:
-  #   - "232"
-  # local_epochs:
-  #   - "1"
-  #   - "3"
-  #   - "5"
-  #   - "10"
 
 # Experiment output settings
 output:

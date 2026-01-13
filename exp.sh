@@ -100,7 +100,8 @@ start_exp() {
     
     print_config
     mkdir -p "${output_base_dir}/$theme/$name"
-    python scripts/train_fl.py \
+    cd "$(dirname "$0")"  # Change to script directory
+    PYTHONPATH="$(pwd):${PYTHONPATH}" python3 scripts/train_fl.py \
         $(for var in "${!config[@]}"; do echo "--$var=${config[$var]}"; done) \
         >"${output_base_dir}/$theme/$name/$time.log" \
         2>&1 &

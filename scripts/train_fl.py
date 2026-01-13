@@ -55,7 +55,7 @@ fl.evaluate()
 # fl.load_aggregator('lstm2.pt')
 
 # Start FL training
-# fl.T = 1 # for debug
+# fl.T = 3 # for debug
 for t in range(fl.T):
     print("==========the {}-th round===========".format(t))
     fl.candidates_sampling()

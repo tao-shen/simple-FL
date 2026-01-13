@@ -61,6 +61,8 @@ class FedSpeed(FedAvg):
             # 计算拟梯度
             for n, p in model.named_parameters():
                 grad_combined = (1 - alpha) * grad_1[n] + alpha * grad_2[n]
+                if p.grad is None:
+                    p.grad = torch.zeros_like(p.data)
                 p.grad.data = grad_combined - client.grad_prox[n].to(self.args.device) + 1 / lambda_ * (p.data - model_g[n]) 
             
             optimizer.step()

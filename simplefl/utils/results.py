@@ -123,11 +123,12 @@ def sql_execute(sql, loc=None):
     """
     if loc == "remote":
         con1 = pymysql.connect(
-            host="10.72.74.136",
+            # host="10.72.74.136",
+            host="10.12.86.192",
             port=13306,
             user="st",
             passwd="st2318822",
-            db="results",
+            db="fedl2o",
         )
         with con1:
             with con1.cursor(pymysql.cursors.DictCursor) as cur1:
