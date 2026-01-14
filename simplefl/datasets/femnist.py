@@ -16,7 +16,7 @@ class FEMNIST:
     Supports natural partitioning, IID, and non-IID (Dirichlet) data splits
     """
 
-    def __init__(self, args, path='./data_in_use/', only_digits=False):
+    def __init__(self, args, path='./data/', only_digits=False):
         """
         Initialize FEMNIST dataset
         

@@ -10,7 +10,7 @@ from .common import init_proxy_data
 class MovieLens:
     """MovieLens dataset loader for recommendation tasks"""
 
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
         if 'rating' in args.note:
             with h5py.File(path + args.dataset + '.h5', 'r') as f:
                 train_data, test_data = f['train'][:], f['test'][:]

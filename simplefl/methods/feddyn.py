@@ -49,7 +49,8 @@ class FedDyn(FedAvg):
 
     def fit_feddyn(self, model, train_loader, optimizer, prox, client):
         model.train().to(model.device)
-        prox_params = prox.to(model.device).state_dict()
+        # 只获取状态字典，不将整个模型移到设备，避免显存积累
+        prox_params = prox.state_dict()
         
         for idx, batch in enumerate(train_loader):
             optimizer.zero_grad()
@@ -61,14 +62,20 @@ class FedDyn(FedAvg):
             # 计算动态正则化项
             prox_loss = 0.0
             for n, p in model.named_parameters():
-                prox_loss += self.alpha * 0.5 * torch.norm(p - prox_params[n]) ** 2
+                # 只在需要时将参数移到设备，使用完立即释放
+                prox_param = prox_params[n].to(p.device)
+                prox_loss += self.alpha * 0.5 * torch.norm(p - prox_param) ** 2
+                del prox_param  # 显式释放
             
                 
             # 计算内积
             grad_loss = 0.0            
             if hasattr(client,'grad'):
                 for n, p in model.named_parameters():
-                    grad_loss += torch.sum(p * client.grad[n])
+                    # 只在需要时将梯度移到设备
+                    grad = client.grad[n].to(p.device)
+                    grad_loss += torch.sum(p * grad)
+                    del grad  # 显式释放
                     
                             
             total_loss = loss + prox_loss+grad_loss
@@ -82,11 +89,22 @@ class FedDyn(FedAvg):
         # 实现更新本地梯度近似，这里简单地将当前模型参数减去上一轮全局模型参数
         # 并乘以 alpha 系数作为梯度近似
         with torch.no_grad():
+            prox_params = prox.state_dict()  # 获取CPU上的参数
             if hasattr(client,'grad'):
-                for (k, g), m, p in zip(client.grad.items(), model.parameters(), prox.parameters()):
-                    client.grad[k]=g-self.alpha*(m-p)
+                for k, m in model.named_parameters():
+                    # 将参数移到CPU进行计算，避免显存积累
+                    m_cpu = m.detach().cpu()
+                    p_cpu = prox_params[k].cpu()
+                    # 确保 client.grad[k] 也在 CPU 上
+                    if client.grad[k].device.type != 'cpu':
+                        client.grad[k] = client.grad[k].cpu()
+                    client.grad[k] = client.grad[k] - self.alpha * (m_cpu - p_cpu)
+                    del m_cpu, p_cpu  # 显式释放
             else:
                 client.grad={}
-                for (k, m), p in zip(model.named_parameters(), prox.parameters()):
-                    client.grad[k]=-self.alpha*(m-p)
-                a=1
+                for k, m in model.named_parameters():
+                    # 将参数移到CPU进行存储，避免显存积累
+                    m_cpu = m.detach().cpu()
+                    p_cpu = prox_params[k].cpu()
+                    client.grad[k] = -self.alpha * (m_cpu - p_cpu)
+                    del m_cpu, p_cpu  # 显式释放

@@ -1,7 +1,7 @@
 from ogb.graphproppred import DglGraphPropPredDataset, collate_dgl
 from torch.utils.data import DataLoader
 
-dataset = DglGraphPropPredDataset(name='ogbg-molhiv', root='data_in_use')
+dataset = DglGraphPropPredDataset(name='ogbg-molhiv', root='data')
 
 split_idx = dataset.get_idx_split()
 train_loader = DataLoader(
@@ -11,7 +11,7 @@ valid_loader = DataLoader(
 test_loader = DataLoader(dataset[split_idx["test"]], batch_size=32, shuffle=False, collate_fn=collate_dgl)
 
 def data_process():
-    path = './data_in_use/'
+    path = './data/'
     train = FashionMNIST(path, train=True, download=True)
     test = FashionMNIST(path, train=False, download=True)
     with h5py.File(path+'fashionmnist.h5', 'w') as f:

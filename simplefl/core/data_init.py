@@ -24,7 +24,7 @@ class Data_init:
     Data initialization class that loads datasets and initializes models
     """
 
-    def __init__(self, args, path='./data_in_use/', only_digits=False, **kwargs):
+    def __init__(self, args, path='./data/', only_digits=False, **kwargs):
         """
         Initialize data and model based on dataset type
         

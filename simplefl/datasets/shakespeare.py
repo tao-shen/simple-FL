@@ -11,7 +11,7 @@ class Shakespeare:
     Shakespeare dataset loader for text-based federated learning
     """
     
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
         """
         Initialize Shakespeare dataset
         

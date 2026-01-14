@@ -12,7 +12,7 @@ import re
 
 class Data_init:
 
-    def __init__(self, args, path='./data_in_use/', only_digits=False, **kwargs):
+    def __init__(self, args, path='./data/', only_digits=False, **kwargs):
         self.args=args
         if 'ml-1m' in args.dataset:
             data = MovieLens(args)
@@ -73,7 +73,7 @@ class Data_init:
         self.user_offset = data.user_offset
 
 class MovieLens:
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
         if 'rating' in args.note:
             with h5py.File(path + args.dataset + '.h5', 'r') as f:
                 train_data, test_data = f['train'][:], f['test'][:]
@@ -122,7 +122,7 @@ class MovieLens:
 
 
 class Amazon:
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
         if 'rating' in args.note:
             with h5py.File(path + args.dataset + '.h5', 'r') as f:
                 train_data, test_data = f['train'][:], f['test'][:]
@@ -172,7 +172,7 @@ class Amazon:
 
 class FEMNIST:
 
-    def __init__(self, args, path='./data_in_use/', only_digits=False):
+    def __init__(self, args, path='./data/', only_digits=False):
 
         with h5py.File(path + args.dataset + '.h5', 'r') as f:
             train_data, test_data = f['train'][:], f['test'][:]
@@ -249,7 +249,7 @@ class FEMNIST:
 
 class Fashion:
 
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
 
         with h5py.File(path + args.dataset + '.h5', 'r') as f:
             train_data, test_data = f['train'][:], f['test'][:]
@@ -320,7 +320,7 @@ class Fashion:
 
 class CIFAR:
 
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
 
         with h5py.File(path + args.dataset + '.h5', 'r') as f:
             train_data, test_data = f['train'][:], f['test'][:]
@@ -393,7 +393,7 @@ class CIFAR:
 
 class Shakespeare:
     
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
         self.args = args
         self.path = path
         self.train_data, self.test_data = self.load_data()

@@ -12,7 +12,7 @@ class Amazon:
     Amazon dataset loader for recommendation tasks
     """
     
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
         """
         Initialize Amazon dataset
         

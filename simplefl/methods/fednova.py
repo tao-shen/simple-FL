@@ -130,6 +130,7 @@ class FedNova(FedAvg):
             )
         except:  # 跳过没有数据的客户端
             # 如果没有数据，记录训练轮数为 0
+            model_l.local_epochs = 0
             return model_l
         
         # 记录实际执行的训练轮数
@@ -141,11 +142,10 @@ class FedNova(FedAvg):
             model_l.fit(train_loader, optimizer)
             actual_epochs += 1
         
-        # 将实际训练轮数存储到模型中，以便服务器端使用
-        # 注意：这里使用模型的 train_num 属性来存储训练轮数
-        # 如果模型没有 train_num 属性，我们会在 clients_update 中单独记录
-        if not hasattr(model_l, 'train_num'):
-            model_l.train_num = actual_epochs
+        # 将实际训练轮数存储到模型的单独属性中
+        # 注意：train_num 会被 fit() 方法自动设置为样本数量，不能覆盖
+        # 所以使用 local_epochs 属性来存储训练轮数
+        model_l.local_epochs = actual_epochs
         
         return model_l
 
@@ -166,9 +166,10 @@ class FedNova(FedAvg):
             model = self.local_update(self.clients[k], self.server.model)
             
             # 记录训练轮数
-            # 优先使用模型的 train_num 属性，如果没有则使用配置的 E
-            if hasattr(model, 'train_num'):
-                epochs = model.train_num
+            # 使用模型的 local_epochs 属性（在 local_update 中设置）
+            # 如果没有则使用配置的 E
+            if hasattr(model, 'local_epochs'):
+                epochs = model.local_epochs
             else:
                 epochs = self.E
             
@@ -202,11 +203,12 @@ class FedNova(FedAvg):
         
         聚合公式：
         =========
-        w_global = w_global + sum(n_i * delta_normalized_i) / sum(n_i)
+        w_global = w_global + lr_g * sum(n_i * delta_normalized_i) / sum(n_i)
         
         其中：
         - n_i: 客户端 i 的样本数量（如果使用加权平均）
         - delta_normalized_i: 客户端 i 的归一化更新量
+        - lr_g: 全局学习率（用于控制更新步长，加快收敛速度）
         """
         # 检查是否有模型和训练轮数记录
         if len(self.models) == 0:
@@ -226,6 +228,10 @@ class FedNova(FedAvg):
         
         # 计算最大训练轮数（用于常数归一化）
         max_epochs = max(self.local_epochs_list) if self.local_epochs_list else self.E
+        
+        # 检查是否所有客户端使用相同的训练轮数
+        # 如果所有客户端使用相同的训练轮数，归一化应该不会改变更新量
+        all_same_epochs = len(set(self.local_epochs_list)) == 1 if self.local_epochs_list else True
         
         for i, model in enumerate(self.models):
             # 获取客户端的训练轮数
@@ -255,6 +261,7 @@ class FedNova(FedAvg):
                 # 对更新量进行归一化
                 if self.normalization_method == 'linear':
                     # 线性归一化：除以本地训练轮数
+                    # 如果所有客户端使用相同的训练轮数，归一化不会改变更新量
                     normalized_delta = delta / epochs
                 elif self.normalization_method == 'constant':
                     # 常数归一化：除以最大训练轮数
@@ -277,10 +284,14 @@ class FedNova(FedAvg):
         for key in aggregated_delta.keys():
             aggregated_delta[key] /= total_weight
         
-        # 更新全局模型：w_global = w_global + aggregated_delta
+        # 获取全局学习率（如果配置了的话）
+        lr_g = getattr(self.args, 'lr_g', 1.0)
+        
+        # 更新全局模型：w_global = w_global + lr_g * aggregated_delta
+        # 使用全局学习率来控制更新步长，加快收敛速度
         w_new = {}
         for key in w_global.keys():
-            w_new[key] = w_global[key] + aggregated_delta[key]
+            w_new[key] = w_global[key] + lr_g * aggregated_delta[key]
         
         # 加载更新后的模型参数
         self.server.model.load_state_dict(w_new)

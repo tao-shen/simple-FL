@@ -16,7 +16,7 @@ class Fashion:
     Supports natural partitioning, IID, and non-IID (Dirichlet) data splits
     """
     
-    def __init__(self, args, path='./data_in_use/'):
+    def __init__(self, args, path='./data/'):
         """
         Initialize Fashion-MNIST dataset
         

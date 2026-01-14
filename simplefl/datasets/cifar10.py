@@ -5,7 +5,7 @@ import numpy as np
 
 
 def data_process():
-    path = './data_in_use/'
+    path = './data/'
     train = CIFAR10(path, train=True, download=True)
     train.data = np.swapaxes(train.data, 2, 3)
     train.data = np.swapaxes(train.data, 1, 2)

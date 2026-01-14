@@ -8,7 +8,7 @@ import shutil
 
 
 def movie_lens():
-    path = './data_in_use/ml-100k/'
+    path = './data/ml-100k/'
     url = 'https://files.grouplens.org/datasets/movielens/ml-100k.zip'
     if not os.path.exists(path):
         os.makedirs(path)
@@ -17,7 +17,7 @@ def movie_lens():
         with open(path+'ml-100k.zip', mode='wb') as f:  # 需要用wb模式
             f.write(res.content)
         shutil.unpack_archive(filename=path+'ml-100k.zip',
-                              extract_dir='./data_in_use/', format='zip')
+                              extract_dir='./data/', format='zip')
     # load users.dat
     u_names = ['user_id', 'user_age', 'user_gender', 'user_occup', 'user_zip']
     users = pd.read_table(path+'u.user',
@@ -45,7 +45,7 @@ def movie_lens():
     # process samples for each user
     groups = history.groupby(by='user_id')
     # save as hdf5
-    with h5py.File('./data_in_use/ml-100k.h5', 'w') as f:
+    with h5py.File('./data/ml-100k.h5', 'w') as f:
         # customize dtype
         names = list(history.columns)
         names.insert(5, 'ipv_item_seq')

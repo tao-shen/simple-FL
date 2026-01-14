@@ -9,7 +9,7 @@ import zipfile
 from PIL import Image
 
 def process_tinyimagenet():
-    path = './data_in_use/tinyimagenet/'
+    path = './data/tinyimagenet/'
     url = 'http://cs231n.stanford.edu/tiny-imagenet-200.zip'
     zip_file_path = path + 'tiny-imagenet-200.zip'
 
@@ -65,7 +65,7 @@ def process_tinyimagenet():
     valset = np.array(val, dtype=dt)
     
     # 保存数据
-    with h5py.File('./data_in_use/tinyimagenet.h5', 'w') as fw:
+    with h5py.File('./data/tinyimagenet.h5', 'w') as fw:
         fw.create_dataset('train', data=trainset)
         fw.create_dataset('test', data=valset)
 

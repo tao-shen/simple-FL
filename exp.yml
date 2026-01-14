@@ -31,15 +31,16 @@ parallel_groups:
 # These parameters will be varied serially (one after another, waiting for completion)
 serial_groups:
   method:
-    - "fedavg"
-    - "fedprox"
-    - "fedavgm"
-    - "scaffold"
-    - "fedopt"
+    # - "fedavg"
+    # - "fedprox"
+    # - "fedavgm"
+    # - "scaffold"
+    # - "fedopt"
     - "fednova"
-    - "fedsam"
+    # - "fedsam"
     - "feddyn"
-    - "fedspeed"
+    # - "fedspeed"
+    - "fedlion"
 
 # Device loop configuration
 # These parameters will be distributed across different devices

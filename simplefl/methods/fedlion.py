@@ -34,7 +34,7 @@ class Lion(torch.optim.Optimizer):
     Lion 更新规则：
     ==============
     u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-    w_t = w_{t-1} - lr * u_t
+    w_t = w_{t-1} - lr * sign(u_t)
     
     其中：
     - g_t: 当前梯度
@@ -89,7 +89,7 @@ class Lion(torch.optim.Optimizer):
         Lion 更新规则：
         1. 计算符号梯度：sign(g_t)
         2. 更新动量：u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-        3. 更新参数：w_t = w_{t-1} - lr * u_t
+        3. 更新参数：w_t = w_{t-1} - lr * sign(u_t)
         
         Args:
             closure: 一个可调用对象，用于重新计算损失和梯度（可选）
@@ -129,8 +129,9 @@ class Lion(torch.optim.Optimizer):
                 if weight_decay != 0:
                     p.data.mul_(1 - lr * weight_decay)
                 
-                # 更新参数：w_t = w_{t-1} - lr * u_t
-                p.data.add_(exp_avg, alpha=-lr)
+                # 更新参数：w_t = w_{t-1} - lr * sign(u_t)
+                # Lion 优化器的关键：使用 sign(u_t) 而不是 u_t 本身
+                p.data.add_(torch.sign(exp_avg), alpha=-lr)
         
         return loss
 
@@ -181,7 +182,7 @@ class FedLion(FedAvg):
     Lion 优化器更新规则：
     ====================
     u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-    w_t = w_{t-1} - lr * u_t
+    w_t = w_{t-1} - lr * sign(u_t)
     
     其中：
     - g_t: 当前梯度
@@ -253,7 +254,7 @@ class FedLion(FedAvg):
               - Lion 优化器更新：
                 * 计算符号梯度：sign(gradient)
                 * 更新动量：u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-                * 更新参数：w_t = w_{t-1} - lr * u_t
+                * 更新参数：w_t = w_{t-1} - lr * sign(u_t)
         
         Args:
             client: 客户端对象，包含本地训练数据
@@ -312,7 +313,7 @@ class FedLion(FedAvg):
                 # Lion 内部会：
                 # 1. 计算符号梯度：sign(gradient)
                 # 2. 更新动量：u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-                # 3. 更新参数：w_t = w_{t-1} - lr * u_t
+                # 3. 更新参数：w_t = w_{t-1} - lr * sign(u_t)
                 optimizer.step()
         
         # 将模型移回 CPU 以节省内存

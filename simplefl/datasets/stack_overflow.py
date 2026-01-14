@@ -10,7 +10,7 @@ import bz2
 
 def data_process():
 
-    path = './data_in_use/stack_overflow/'
+    path = './data/stack_overflow/'
     url = 'https://storage.googleapis.com/tff-datasets-public/fed_emnist.tar.bz2'
     if not os.path.exists(path):
         os.makedirs(path)
@@ -24,7 +24,7 @@ def data_process():
             archive.extract(tarinfo, path)
         archive.close()
 
-    with h5py.File(path+'fed_emnist_train.h5', 'r') as read_train, h5py.File(path+'fed_emnist_test.h5', 'r') as read_test, h5py.File('./data_in_use/femnist.h5', 'w') as fw:
+    with h5py.File(path+'fed_emnist_train.h5', 'r') as read_train, h5py.File(path+'fed_emnist_test.h5', 'r') as read_test, h5py.File('./data/femnist.h5', 'w') as fw:
         train, test = [], []
 
         data = read_train['examples']
