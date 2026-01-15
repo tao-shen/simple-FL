@@ -38,9 +38,9 @@ ml-1m:
     label: ['label']
 
 cifar10:
-  local_batch_size: 128
-  local_epochs: 3
-  eval_batch_size: 200
+  local_batch_size: 512
+  local_epochs: 5
+  eval_batch_size: 512
   n_clients: 10
   clients_per_round: 10
   communication_rounds: 200
@@ -51,9 +51,9 @@ cifar10:
     label: ['label']
 
 cifar100:
-  local_batch_size: 128
-  local_epochs: 3
-  eval_batch_size: 200
+  local_batch_size: 512
+  local_epochs: 5
+  eval_batch_size: 512
   n_clients: 10
   clients_per_round: 10
   communication_rounds: 200

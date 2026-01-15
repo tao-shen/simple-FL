@@ -12,14 +12,32 @@ devices:
 base_config:
   theme: "FedL2O"
   exp_name: "main_baselines"
-  dataset: "femnist"
+  dataset: "cifar10"
   # clients_per_round: 10
   # local_epochs: 5
   # test_client_ratio: 0.1
 
 # Parallel experiment groups
 # These parameters will be varied in parallel (all combinations)
-parallel_groups:
+parallel_groups: {}
+
+# Serial experiment groups
+# These parameters will be varied serially (one after another, waiting for completion)
+serial_groups:
+  dataset:
+    - "cifar10"
+    - "cifar100"
+  method:
+    - "fedavg"
+    - "fedprox"
+    - "fedavgm"
+    - "scaffold"
+    - "fedopt"
+    - "fednova"
+    - "fedsam"
+    - "feddyn"
+    - "fedspeed"
+    - "fedlion"
   seed:
     - "192"
     - "225"
@@ -27,26 +45,12 @@ parallel_groups:
     - "230"
     - "231"
 
-# Serial experiment groups
-# These parameters will be varied serially (one after another, waiting for completion)
-serial_groups:
-  method:
-    # - "fedavg"
-    # - "fedprox"
-    # - "fedavgm"
-    # - "scaffold"
-    # - "fedopt"
-    # - "fednova"
-    # - "fedsam"
-    - "feddyn"
-    - "fedspeed"
-    # - "fedlion"
 
 # Device loop configuration
 # These parameters will be distributed across different devices
 device_loop:
   iid:
-    - "natural"
+    # - "natural"
     - "alpha_1"
     - "alpha_0.1"
     - "alpha_0.01"
