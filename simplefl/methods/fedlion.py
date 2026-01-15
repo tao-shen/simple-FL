@@ -8,132 +8,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, List
 
 
 # ==================== 常量定义 ====================
 
 # FedLion 默认参数
-DEFAULT_BETA1 = 0.9  # Lion 优化器的动量系数
-DEFAULT_BETA2 = 0.99  # Lion 优化器的二阶动量系数（如果使用）
-DEFAULT_WEIGHT_DECAY = 0.0  # 权重衰减系数
-
-
-# ==================== Lion 优化器类定义 ====================
-
-class Lion(torch.optim.Optimizer):
-    """
-    Lion (EvoLved Sign Momentum) 优化器
-    
-    Lion 是一种基于符号梯度的优化器，通过使用梯度的符号而不是原始梯度值来更新参数。
-    这种方法具有以下优势：
-    1. 减少内存使用：只需要存储符号，而不是完整的梯度值
-    2. 提高数值稳定性：符号操作对梯度缩放不敏感
-    3. 减少通信开销：在联邦学习中，只需要传输符号梯度
-    
-    Lion 更新规则：
-    ==============
-    u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-    w_t = w_{t-1} - lr * sign(u_t)
-    
-    其中：
-    - g_t: 当前梯度
-    - sign(g_t): 梯度的符号（+1, 0, 或 -1）
-    - u_t: 动量项
-    - β1: 动量系数（通常为 0.9）
-    - lr: 学习率
-    - w_t: 更新后的参数
-    
-    与 Adam 的区别：
-    ===============
-    - Adam 使用原始梯度值和二阶矩估计
-    - Lion 只使用梯度的符号，不需要二阶矩估计
-    - Lion 更简单，内存效率更高
-    
-    Attributes:
-        beta1: 动量系数
-        weight_decay: 权重衰减系数
-    """
-    
-    def __init__(self, params, lr=1e-4, betas=(0.9, 0.99), weight_decay=0.0):
-        """
-        初始化 Lion 优化器
-        
-        Args:
-            params: 要优化的参数（通常是 model.parameters()）
-            lr: 学习率（默认 1e-4）
-            betas: 动量系数元组 (beta1, beta2)
-                   - beta1: 一阶动量系数（默认 0.9）
-                   - beta2: 二阶动量系数（在 Lion 中通常不使用，但保留以保持接口一致性）
-            weight_decay: 权重衰减系数（默认 0.0）
-        """
-        if not 0.0 <= lr:
-            raise ValueError(f"学习率必须非负: {lr}")
-        if not 0.0 <= betas[0] < 1.0:
-            raise ValueError(f"beta1 必须在 [0, 1) 范围内: {betas[0]}")
-        if not 0.0 <= weight_decay:
-            raise ValueError(f"权重衰减必须非负: {weight_decay}")
-        
-        defaults = dict(lr=lr, betas=betas, weight_decay=weight_decay)
-        super(Lion, self).__init__(params, defaults)
-        
-        # 保存参数
-        self.beta1 = betas[0]
-        self.weight_decay = weight_decay
-
-    @torch.no_grad()
-    def step(self, closure=None):
-        """
-        执行一步优化
-        
-        Lion 更新规则：
-        1. 计算符号梯度：sign(g_t)
-        2. 更新动量：u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-        3. 更新参数：w_t = w_{t-1} - lr * sign(u_t)
-        
-        Args:
-            closure: 一个可调用对象，用于重新计算损失和梯度（可选）
-        
-        Returns:
-            损失值（如果提供了 closure）
-        """
-        loss = None
-        if closure is not None:
-            with torch.enable_grad():
-                loss = closure()
-        
-        for group in self.param_groups:
-            for p in group['params']:
-                if p.grad is None:
-                    continue
-                
-                grad = p.grad
-                lr = group['lr']
-                beta1 = group['betas'][0]
-                weight_decay = group['weight_decay']
-                
-                # 获取或初始化动量状态
-                state = self.state[p]
-                if 'exp_avg' not in state:
-                    state['exp_avg'] = torch.zeros_like(p)
-                
-                exp_avg = state['exp_avg']
-                
-                # 计算符号梯度：sign(g_t)
-                sign_grad = torch.sign(grad)
-                
-                # 更新动量：u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-                exp_avg.mul_(beta1).add_(sign_grad, alpha=1 - beta1)
-                
-                # 应用权重衰减（如果启用）
-                if weight_decay != 0:
-                    p.data.mul_(1 - lr * weight_decay)
-                
-                # 更新参数：w_t = w_{t-1} - lr * sign(u_t)
-                # Lion 优化器的关键：使用 sign(u_t) 而不是 u_t 本身
-                p.data.add_(torch.sign(exp_avg), alpha=-lr)
-        
-        return loss
+DEFAULT_BETA1 = 0.9  # 动量系数 β1
+DEFAULT_BETA2 = 0.99  # 动量系数 β2
 
 
 # ==================== FedLion 主类定义 ====================
@@ -142,67 +24,34 @@ class FedLion(FedAvg):
     """
     FedLion: Federated Lion Optimizer（联邦 Lion 优化器）
     
-    一种自适应的联邦优化算法，旨在提高联邦学习的收敛速度并减少通信开销。
-    FedLion 将 Lion 优化器的关键元素无缝集成到联邦学习框架中。
+    根据算法伪代码实现的FedLion方法：
     
-    核心思想：
-    =========
-    1. Lion 优化器：
-       - 使用符号梯度（sign-based gradient）而不是原始梯度
-       - 自适应学习率和动量机制
-       - 减少内存使用和通信开销
+    Algorithm 1 FedLion:
+    ===================
+    1. 初始化全局模型 x0 和全局动量 m0 = 0
     
-    2. 联邦学习集成：
-       - 在客户端本地使用 Lion 优化器进行训练
-       - 在服务器端聚合模型更新
-       - 利用符号梯度减少通信开销
-    
-    3. 优势：
-       - 更快的收敛速度：自适应学习率机制
-       - 减少通信开销：只传输符号梯度或模型更新
-       - 更好的泛化性能：Lion 优化器的特性
-    
-    工作原理：
-    =========
-    1. 初始化：服务器初始化全局模型，并将其分发给所有客户端
-    
-    2. 客户端本地训练：
-       a. 复制全局模型到本地
-       b. 创建 Lion 优化器
-       c. 在本地数据上进行训练：
-          - 计算梯度
-          - 使用符号梯度更新参数
-          - Lion 优化器自动处理动量和学习率
-    
-    3. 服务器聚合：
-       - 收集所有客户端的模型更新
-       - 使用加权平均聚合模型参数
-       - 更新全局模型
-    
-    Lion 优化器更新规则：
-    ====================
-    u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-    w_t = w_{t-1} - lr * sign(u_t)
-    
-    其中：
-    - g_t: 当前梯度
-    - sign(g_t): 梯度的符号（+1, 0, 或 -1）
-    - u_t: 动量项
-    - β1: 动量系数（通常为 0.9）
-    - lr: 学习率
-    - w_t: 更新后的参数
-    
-    优势：
-    =====
-    - 更快的收敛速度：自适应学习率机制
-    - 减少通信开销：符号梯度只需要 1 bit 信息
-    - 更好的数值稳定性：符号操作对梯度缩放不敏感
-    - 内存效率：不需要存储完整的梯度值
+    2. 对于每一轮通信 t = 1 to T:
+       a. 客户端侧（对于每个被选中的客户端 i）:
+          - 接收全局模型 x_{t-1} 和全局动量 m_{t-1}
+          - 初始化本地模型 x_{t-1,0}^i = x_{t-1}
+          - 初始化本地动量 m_{t-1,0}^i = m_{t-1}
+          - 对于每个本地步 s = 1 to E:
+            * 计算梯度 g_{t-1,s}^i (使用batch size B)
+            * h_{t-1,s}^i = β1 * m_{t-1,s-1}^i + (1 - β1) * g_{t-1,s}^i
+            * h_{t-1,s}^i = Sign(h_{t-1,s}^i)
+            * x_{t-1,s}^i = x_{t-1,s-1}^i - γ * h_{t-1,s}^i
+            * m_{t-1,s}^i = β2 * m_{t-1,s-1}^i + (1 - β2) * g_{t-1,s}^i
+          - 计算更新差异: Δ_{t-1}^i = (x_{t-1} - x_{t-1,E}^i) / γ (整数化)
+          - 发送 Δ_{t-1}^i 和 m_{t-1,E}^i 到服务器
+       
+       b. 服务器侧:
+          - x_t = x_{t-1} - (γ / n) * Σ_{i=1}^n Δ_{t-1}^i
+          - m_t = (1 / n) * Σ_{i=1}^n m_{t-1,E}^i
     
     Attributes:
-        beta1: Lion 优化器的动量系数
-        beta2: Lion 优化器的二阶动量系数（保留以保持接口一致性）
-        weight_decay: 权重衰减系数
+        beta1: 动量系数 β1 (默认 0.9)
+        beta2: 动量系数 β2 (默认 0.99)
+        global_momentum: 全局动量状态字典
     """
     
     def __init__(self, server, clients, args):
@@ -219,49 +68,58 @@ class FedLion(FedAvg):
         # 从配置中获取 FedLion 参数，如果没有则使用默认值
         self.beta1 = getattr(args, 'lion_beta1', DEFAULT_BETA1)
         self.beta2 = getattr(args, 'lion_beta2', DEFAULT_BETA2)
-        self.weight_decay = getattr(args, 'lion_weight_decay', DEFAULT_WEIGHT_DECAY)
+        
+        # 全局动量（初始化为None，在server_init中初始化）
+        self.global_momentum = None
         
         # 打印 FedLion 配置信息
         print(f"FedLion 初始化完成:")
         print(f"  - 动量系数 (beta1): {self.beta1}")
-        print(f"  - 二阶动量系数 (beta2): {self.beta2}")
-        print(f"  - 权重衰减 (weight_decay): {self.weight_decay}")
+        print(f"  - 动量系数 (beta2): {self.beta2}")
+        print(f"  - 学习率 (gamma): {self.args.lr_l}")
 
     def server_init(self):
         """
-        服务器初始化：初始化全局模型
+        服务器初始化：初始化全局模型和全局动量
         
-        与 FedAvg 保持一致，初始化全局模型。
+        根据算法伪代码：
+        - 初始化全局模型 x0 (随机初始化)
+        - 初始化全局动量 m0 = 0
         """
         # 初始化全局模型
         self.server.model = self.server.init_model()
+        
+        # 初始化全局动量为零（与模型参数形状相同）
+        self.global_momentum = {}
+        with torch.no_grad():
+            for name, param in self.server.model.named_parameters():
+                self.global_momentum[name] = torch.zeros_like(param.data)
 
     def local_update(self, client, model_g):
         """
-        客户端本地更新：使用 Lion 优化器进行本地训练
+        客户端本地更新：根据算法伪代码实现
         
-        这是 FedLion 的核心方法。在本地训练过程中，使用 Lion 优化器代替传统的 SGD 或 Adam。
-        Lion 优化器使用符号梯度进行更新，具有更好的数值稳定性和更低的通信开销。
-        
-        训练流程：
+        算法流程：
         =========
-        1. 复制全局模型到本地
-        2. 创建 Lion 优化器
-        3. 对每个 epoch：
-           a. 对每个 batch：
-              - 前向传播：计算预测值和损失
-              - 反向传播：计算梯度
-              - Lion 优化器更新：
-                * 计算符号梯度：sign(gradient)
-                * 更新动量：u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-                * 更新参数：w_t = w_{t-1} - lr * sign(u_t)
+        1. 接收全局模型 x_{t-1} 和全局动量 m_{t-1}
+        2. 初始化本地模型 x_{t-1,0}^i = x_{t-1}
+        3. 初始化本地动量 m_{t-1,0}^i = m_{t-1}
+        4. 对于每个本地步 s = 1 to E:
+           - 计算梯度 g_{t-1,s}^i
+           - h_{t-1,s}^i = β1 * m_{t-1,s-1}^i + (1 - β1) * g_{t-1,s}^i
+           - h_{t-1,s}^i = Sign(h_{t-1,s}^i)
+           - x_{t-1,s}^i = x_{t-1,s-1}^i - γ * h_{t-1,s}^i
+           - m_{t-1,s}^i = β2 * m_{t-1,s-1}^i + (1 - β2) * g_{t-1,s}^i
+        5. 计算更新差异: Δ_{t-1}^i = (x_{t-1} - x_{t-1,E}^i) / γ
+        6. 返回更新差异和最终动量
         
         Args:
             client: 客户端对象，包含本地训练数据
             model_g: 全局模型
         
         Returns:
-            model_l: 本地训练后的模型
+            delta: 更新差异 Δ_{t-1}^i (字典格式，按参数名组织)
+            momentum: 最终本地动量 m_{t-1,E}^i (字典格式，按参数名组织)
         """
         # 复制全局模型到本地
         model_l = copy.deepcopy(model_g)
@@ -274,21 +132,34 @@ class FedLion(FedAvg):
                 shuffle=True
             )
         except:  # 跳过没有数据的客户端
-            return model_l
+            # 返回零更新和零动量
+            delta = {}
+            momentum = {}
+            for name, param in model_g.named_parameters():
+                delta[name] = torch.zeros_like(param.data)
+                momentum[name] = torch.zeros_like(param.data)
+            return delta, momentum
         
         # 将模型移动到正确的设备上
         model_l = model_l.to(self.args.device)
         
-        # 创建 Lion 优化器
-        # Lion 优化器使用符号梯度，具有更好的数值稳定性和更低的通信开销
-        optimizer = Lion(
-            model_l.parameters(),
-            lr=self.args.lr_l,
-            betas=(self.beta1, self.beta2),
-            weight_decay=self.weight_decay if self.weight_decay > 0 else self.args.weight_decay
-        )
+        # 初始化本地动量（从全局动量复制）
+        local_momentum = {}
+        for name, param in model_l.named_parameters():
+            if self.global_momentum is not None and name in self.global_momentum:
+                local_momentum[name] = self.global_momentum[name].clone().to(self.args.device)
+            else:
+                local_momentum[name] = torch.zeros_like(param.data)
         
-        # 执行本地训练
+        # 保存初始模型参数（用于计算更新差异）
+        initial_params = {}
+        for name, param in model_l.named_parameters():
+            initial_params[name] = param.data.clone()
+        
+        # 学习率
+        gamma = self.args.lr_l
+        
+        # 执行本地训练 E 步
         for epoch in range(self.E):
             model_l.train()
             
@@ -297,7 +168,7 @@ class FedLion(FedAvg):
                 batch = to_device(batch, self.args.device)
                 
                 # 清零梯度
-                optimizer.zero_grad()
+                model_l.zero_grad()
                 
                 # 前向传播：计算预测值
                 output = model_l(batch)
@@ -309,45 +180,112 @@ class FedLion(FedAvg):
                 # 反向传播：计算梯度
                 loss.backward()
                 
-                # Lion 优化器更新参数
-                # Lion 内部会：
-                # 1. 计算符号梯度：sign(gradient)
-                # 2. 更新动量：u_t = β1 * u_{t-1} + (1 - β1) * sign(g_t)
-                # 3. 更新参数：w_t = w_{t-1} - lr * sign(u_t)
-                optimizer.step()
+                # 根据算法伪代码更新参数和动量
+                with torch.no_grad():
+                    for name, param in model_l.named_parameters():
+                        if param.grad is None:
+                            continue
+                        
+                        # 获取梯度
+                        grad = param.grad.data
+                        
+                        # 步骤 10: h_{t-1,s}^i = β1 * m_{t-1,s-1}^i + (1 - β1) * g_{t-1,s}^i
+                        h = self.beta1 * local_momentum[name] + (1 - self.beta1) * grad
+                        
+                        # 步骤 11: h_{t-1,s}^i = Sign(h_{t-1,s}^i)
+                        h = torch.sign(h)
+                        
+                        # 步骤 12: x_{t-1,s}^i = x_{t-1,s-1}^i - γ * h_{t-1,s}^i
+                        param.data = param.data - gamma * h
+                        
+                        # 步骤 13: m_{t-1,s}^i = β2 * m_{t-1,s-1}^i + (1 - β2) * g_{t-1,s}^i
+                        local_momentum[name] = self.beta2 * local_momentum[name] + (1 - self.beta2) * grad
         
-        # 将模型移回 CPU 以节省内存
-        model_l = model_l.cpu()
+        # 计算更新差异: Δ_{t-1}^i = (x_{t-1} - x_{t-1,E}^i) / γ
+        delta = {}
+        final_momentum = {}
+        for name, param in model_l.named_parameters():
+            # 计算更新差异（整数化，这里我们保持浮点数，实际应用中可能需要量化）
+            # 确保所有张量在同一设备上计算
+            initial_param_cpu = initial_params[name].cpu()
+            param_cpu = param.data.cpu()
+            delta[name] = (initial_param_cpu - param_cpu) / gamma
+            final_momentum[name] = local_momentum[name].cpu()
         
-        return model_l
+        return delta, final_momentum
 
     def clients_update(self):
         """
-        客户端更新：收集所有候选客户端的模型更新
+        客户端更新：收集所有候选客户端的更新差异和动量
         
-        遍历所有候选客户端，使用 Lion 优化器进行本地训练。
+        遍历所有候选客户端，执行本地训练并收集更新差异和最终动量。
         """
-        self.models = []
+        self.deltas = []  # 存储所有客户端的更新差异
+        self.momentums = []  # 存储所有客户端的最终动量
         
         for k in tqdm(self.candidates, desc=self.__class__.__name__):
-            # 使用 Lion 优化器进行本地训练
-            model = self.local_update(self.clients[k], self.server.model)
-            self.models.append(model.cpu())
+            # 执行本地更新，返回更新差异和最终动量
+            delta, momentum = self.local_update(self.clients[k], self.server.model)
+            self.deltas.append(delta)
+            self.momentums.append(momentum)
 
     def server_update(self):
         """
-        服务器更新：聚合客户端更新并更新全局模型
+        服务器更新：根据算法伪代码聚合更新并更新全局模型和动量
         
-        使用标准的加权平均聚合模型参数。
-        
-        更新流程：
+        算法流程：
         =========
-        1. 聚合客户端模型更新
-        2. 更新全局模型
+        步骤 19: x_t = x_{t-1} - (γ / n) * Σ_{i=1}^n Δ_{t-1}^i
+        步骤 20: m_t = (1 / n) * Σ_{i=1}^n m_{t-1,E}^i
+        
+        其中：
+        - n: 参与本轮训练的客户端数量
+        - γ: 学习率
+        - Δ_{t-1}^i: 客户端 i 的更新差异
+        - m_{t-1,E}^i: 客户端 i 的最终动量
         """
-        # 使用标准的加权平均聚合模型
-        w = self.averaging(self.models)
-        self.server.model.load_state_dict(w)
+        n = len(self.deltas)  # 参与训练的客户端数量
+        if n == 0:
+            return
+        
+        gamma = self.args.lr_l
+        
+        # 聚合更新差异
+        aggregated_delta = {}
+        for name in self.deltas[0].keys():
+            # 计算所有客户端的更新差异的平均值
+            delta_sum = torch.zeros_like(self.deltas[0][name])
+            for delta in self.deltas:
+                delta_sum += delta[name]
+            aggregated_delta[name] = delta_sum / n
+        
+        # 聚合动量
+        aggregated_momentum = {}
+        for name in self.momentums[0].keys():
+            # 计算所有客户端的动量的平均值
+            momentum_sum = torch.zeros_like(self.momentums[0][name])
+            for momentum in self.momentums:
+                momentum_sum += momentum[name]
+            aggregated_momentum[name] = momentum_sum / n
+        
+        # 更新全局模型: x_t = x_{t-1} - (γ / n) * Σ_{i=1}^n Δ_{t-1}^i
+        with torch.no_grad():
+            # 获取服务器模型的设备
+            device = next(self.server.model.parameters()).device
+            
+            for name, param in self.server.model.named_parameters():
+                if name in aggregated_delta:
+                    # x_t = x_{t-1} - (γ / n) * Σ Δ_i
+                    # 注意：aggregated_delta 已经是平均值，所以直接乘以 gamma
+                    # 确保 aggregated_delta 在正确的设备上
+                    delta_tensor = aggregated_delta[name].to(device)
+                    param.data = param.data - gamma * delta_tensor
+        
+        # 更新全局动量: m_t = (1 / n) * Σ_{i=1}^n m_{t-1,E}^i
+        # 将全局动量移到CPU存储（因为服务器模型可能在不同设备上）
+        self.global_momentum = {}
+        for name, momentum_tensor in aggregated_momentum.items():
+            self.global_momentum[name] = momentum_tensor.cpu()
 
     def averaging(self, models, w=None):
         """

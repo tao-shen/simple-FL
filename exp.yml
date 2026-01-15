@@ -36,11 +36,11 @@ serial_groups:
     # - "fedavgm"
     # - "scaffold"
     # - "fedopt"
-    - "fednova"
+    # - "fednova"
     # - "fedsam"
     - "feddyn"
-    # - "fedspeed"
-    - "fedlion"
+    - "fedspeed"
+    # - "fedlion"
 
 # Device loop configuration
 # These parameters will be distributed across different devices
