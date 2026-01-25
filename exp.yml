@@ -10,16 +10,22 @@ devices:
 
 # Base experiment configuration
 base_config:
-  theme: "FedL2O"
+  theme: "FedL2O_baselines"
   exp_name: "main_baselines"
-  dataset: "cifar10"
+  # dataset: "cifar10"
   # clients_per_round: 10
   # local_epochs: 5
   # test_client_ratio: 0.1
 
 # Parallel experiment groups
 # These parameters will be varied in parallel (all combinations)
-parallel_groups: {}
+parallel_groups:
+  seed:
+    - "192"
+    - "225"
+    - "226"
+    - "230"
+    - "231"
 
 # Serial experiment groups
 # These parameters will be varied serially (one after another, waiting for completion)
@@ -38,12 +44,7 @@ serial_groups:
     - "feddyn"
     - "fedspeed"
     - "fedlion"
-  seed:
-    - "192"
-    - "225"
-    - "226"
-    - "230"
-    - "231"
+
 
 
 # Device loop configuration
