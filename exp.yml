@@ -10,9 +10,10 @@ devices:
 
 # Base experiment configuration
 base_config:
-  theme: "FedL2O_baselines"
+  theme: "FedL2O_0.8"
   exp_name: "main_baselines"
-  # dataset: "cifar10"
+  dataset: "femnist"
+  method: "fedavg"
   # clients_per_round: 10
   # local_epochs: 5
   # test_client_ratio: 0.1
@@ -30,9 +31,10 @@ parallel_groups:
 # Serial experiment groups
 # These parameters will be varied serially (one after another, waiting for completion)
 serial_groups:
-  dataset:
-    - "cifar10"
-    - "cifar100"
+  # dataset:
+  #   - "femnist"
+    # - "cifar10"
+    # - "cifar100"
   method:
     - "fedavg"
     - "fedprox"
@@ -44,6 +46,11 @@ serial_groups:
     - "feddyn"
     - "fedspeed"
     - "fedlion"
+    # - "fedavg_client_drift_only"
+    # - "fedavg_period_drift_only"
+    # - "fedavg"
+    # - "fedeve"
+
 
 
 
@@ -51,7 +58,7 @@ serial_groups:
 # These parameters will be distributed across different devices
 device_loop:
   iid:
-    # - "natural"
+    - "natural"
     - "alpha_1"
     - "alpha_0.1"
     - "alpha_0.01"

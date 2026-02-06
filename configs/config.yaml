@@ -1,16 +1,16 @@
 # dataset: ml-1m
 # dataset: last_fm
 # dataset: alipay
-# dataset: femnist
+dataset: femnist
 # dataset: fashionmnist
 # dataset: ml-100k
 # dataset: amazon
-dataset: cifar10
+# dataset: cifar10
 # dataset: cifar100
 # dataset: shakespeare
 device: cuda:3
 proxy_ratio: 0.01
-method: 'fedavg'
+method: 'fedl2o_mamba'
 # note: 'rating'
 note: 'agg1'
 iid: 'alpha_1'

@@ -67,6 +67,20 @@ femnist:
     server_epochs: 1
     server_optimizer: 'adam'
     # test_client_ratio: 0.2
+  fedl2o_lstm:
+    lr_l: 0.001
+    lr_g: 0.01
+    proxy_ratio: 0.01
+    server_batch_size: 500
+    server_epochs: 1
+    server_optimizer: 'adam'
+  fedl2o_mamba:
+    lr_l: 0.001
+    lr_g: 0.01
+    proxy_ratio: 0.01
+    server_batch_size: 500
+    server_epochs: 1
+    server_optimizer: 'adam'
   feddyn:
     lr_l: 0.001
   fedspeed:

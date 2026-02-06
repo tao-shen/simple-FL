@@ -27,7 +27,10 @@ class FedAvg(FL):
             n, int(args.validate_client_ratio*self.N), replace=False)
             self.clients_train_ind = np.setdiff1d(n, self.clients_test_ind)
         else:
-            self.clients_train_ind = np.arange(self.N)
+            n=np.arange(self.N)
+            self.clients_train_ind = np.random.choice(
+            n, int((1-args.validate_client_ratio)*self.N), replace=False)
+            # self.clients_train_ind = np.arange(self.N)
         
         self.opts = {'sgd': torch.optim.SGD, 'adam': torch.optim.Adam}
 
